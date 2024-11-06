@@ -1,0 +1,15 @@
+.env
+*.env.*
+
+logs
+*.log*
+
+.idea
+.vscode
+
+**/*.pyc
+
+**/.*
+docker/volumes/*
+volumes/*
+tests/*

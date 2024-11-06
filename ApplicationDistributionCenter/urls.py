@@ -1,4 +1,4 @@
-"""SynthesisMacApplicationDistributionCenter URL Configuration
+"""ApplicationDistributionCenter URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -16,7 +16,6 @@ Including another URLconf
 from typing import List, Any
 
 from django.conf import settings
-from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, re_path
@@ -39,7 +38,7 @@ handler500 = custom_500_view
 
 urlpatterns = [
                   re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-                  url(r'^favicon.ico$', RedirectView.as_view(url=r'/static/favicon.ico')),
+                  re_path(r'^favicon.ico$', RedirectView.as_view(url=r'/static/favicon.ico')),
                   path('center/all/control/', admin.site.urls),
                   path('', home),
                   path('index/', home),
