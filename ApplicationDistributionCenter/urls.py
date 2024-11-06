@@ -56,5 +56,5 @@ urlpatterns = [
                   path('user/details/', user_details),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + rt.urlpatterns
 document_root = settings.STATIC_ROOT
-# NOTE: The code is only valid in development environment. In production environment, the code will not work.
+# NOTE: The code behind `+` is only valid in development environment. In production environment, the code will not work.
 
