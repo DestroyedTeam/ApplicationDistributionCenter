@@ -7,4 +7,4 @@ python manage.py migrate
 python manage.py collectstatic --noinput
 
 # Start the Django application using gunicorn
-gunicorn applicationdistributioncenter.wsgi:application --bind 0.0.0.0:8000
+gunicorn ApplicationDistributionCenter.wsgi:application --bind 0.0.0.0:8000

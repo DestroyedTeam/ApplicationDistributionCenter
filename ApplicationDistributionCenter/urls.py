@@ -37,8 +37,10 @@ handler404 = custom_404_view
 handler500 = custom_500_view
 
 urlpatterns = [
+                  # NOTE: these re_path are both valid in development and production environment.
                   re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-                  re_path(r'^favicon.ico$', RedirectView.as_view(url=r'/static/favicon.ico')),
+                  re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+                  re_path(r'^favicon.ico$', RedirectView.as_view(url=f'{settings.STATIC_ROOT}/favicon.ico')),
                   path('center/all/control/', admin.site.urls),
                   path('', home),
                   path('index/', home),
@@ -50,7 +52,9 @@ urlpatterns = [
                   path('questions/', init_questions),
                   path('software/details/', software_details),
                   path('login/', login),
-                    path('logout/', logout),
-                    path('user/details/', user_details),
+                  path('logout/', logout),
+                  path('user/details/', user_details),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + rt.urlpatterns
 document_root = settings.STATIC_ROOT
+# NOTE: The code is only valid in development environment. In production environment, the code will not work.
+

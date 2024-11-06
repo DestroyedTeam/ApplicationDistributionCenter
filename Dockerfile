@@ -5,14 +5,14 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Set work directory
-WORKDIR /code
+WORKDIR /ApplicationDistributionCenter
 
 # Install dependencies
-COPY pyproject.toml poetry.lock /code/
+COPY ./pyproject.toml poetry.lock /ApplicationDistributionCenter/
 RUN pip install poetry && poetry config virtualenvs.create false && poetry install
 
 # Copy project
-COPY . /code/
+COPY . /ApplicationDistributionCenter/
 
 # Expose port
 EXPOSE 8000

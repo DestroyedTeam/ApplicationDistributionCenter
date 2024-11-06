@@ -7,13 +7,10 @@ x-shared-database-env: &shared-web-env
 services:
   application-center:
     image: application-center:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
     environment:
       # Django configuration
       DEBUG: True
-      SECRET_KEY: ${SECRET_KEY:-}
+      SECRET_KEY: ${SECRET_KEY:-test-secret-key}
 
       # MySQL configuration
       MYSQL_HOST: ${MYSQL_HOST:-application-center-db}
@@ -25,7 +22,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: redis
     ports:
-      - "8080:8080"
+      - "8080:8000"
     depends_on:
       application-center-db:
         condition: service_healthy
