@@ -12,7 +12,6 @@ from software.models import SoftWare
 
 
 @require_GET
-@router.path(pattern='')
 def category(request):
     if request.method == 'GET':
         categories = get_all_category()
@@ -60,18 +59,7 @@ def category(request):
                               'code': 404,
                               'error': 'category not found',
                           })
-    else:
-        return render(request, 'category.html', {
-            'code': 405,
-            'error': 'invalid request action',
-        })
-
-
-@require_POST
-@router.path(pattern='load/left/')
-def category(request):
-    # if request.method == 'GET':
-    if request.method == 'POST':
+    elif request.method == 'POST':
         categories = get_all_category()
         if len(categories) <= 0:
             return JsonResponse({
@@ -133,13 +121,12 @@ def category(request):
                 'error': 'category not found',
             })
     else:
-        return JsonResponse({
+        return render(request, 'category.html', {
             'code': 405,
             'error': 'invalid request action',
         })
 
 
-@router.path('api/get/category/tags/')
 @require_POST
 def get_category_tags(request):
     if request.method == 'POST':
@@ -158,3 +145,5 @@ def get_category_tags(request):
                 })
             except Exception as e:
                 return JsonResponse({'code': 500, 'error': str(e)})
+    else:
+        return JsonResponse({'code': 405, 'error': 'invalid request action'})

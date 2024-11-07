@@ -6,16 +6,16 @@ from django.views.decorators.http import require_POST, require_GET
 from django_router import router
 
 from general.common_compute import compute_similarity
-from general.data_handler import handle_uploaded_image
+from general.data_handler import storage_uploaded_image
 from general.encrypt import decrypt
 from general.init_cache import (get_software_by_software_id,
                                 get_all_software, get_all_user)
 from .models import SoftWare
 
 
-@router.path('publish/')
 @login_required
 @require_POST
+# TODO：这个函数应该写成接口，而不是渲染页面
 def publish_software(request):
     if request.method == "POST":
         software = None
@@ -46,11 +46,11 @@ def publish_software(request):
             link_direct = request.POST.get('link_direct') \
                 if request.POST.get('link_direct') else None
             link_123 = request.POST.get('link_123')
-            icon_url = handle_uploaded_image(request.FILES.get('icon'),
+            icon_url = storage_uploaded_image(request.FILES.get('icon'),
                                              'software/icon/')
             for index in range(1, 6):
                 screen_shots_urls.append(
-                    handle_uploaded_image(request.FILES.get('software_screenshot_' + str(index)),
+                    storage_uploaded_image(request.FILES.get('software_screenshot_' + str(index)),
                                           'software/screenshots/')
                 )
             software = SoftWare.objects.create(
@@ -104,13 +104,10 @@ def publish_software(request):
         })
 
 
-@router.path('api/get/single/software/')
 @require_POST
-def get_software_details(request):
-    # if request.method == "GET":
+def get_software_detail(request):
     if request.method == "POST":
         try:
-            # software_id = int(request.GET.get('software_id'))
             software_id = request.POST.get('software_id')
             software_id = int(decrypt(software_id))
         except ValueError:
@@ -206,13 +203,10 @@ def get_software_details(request):
         })
 
 
-@router.path('api/get/software/')
 @require_POST
-def get_some_software(request):
-    # if request.method == 'GET':
+def get_software(request):
     if request.method == "POST":
         try:
-            # page_num = request.GET.get('page_num')
             page_num = request.POST.get('page_num')
             if page_num is None:
                 page_num = 1
@@ -300,7 +294,7 @@ def get_some_software(request):
 
 
 @require_GET
-def software_details(request):
+def software_detail_page(request):
     if request.method == 'GET':
         software_id = request.GET.get('software_id')
         try:
@@ -341,120 +335,29 @@ def software_details(request):
         })
 
 
-@router.path(pattern='api/thumb/')
 @require_POST
-def thumb(request):
+def update_software_metrics(request):
     if request.method == 'POST':
         try:
-            thumb_type = request.POST.get('thumb_type')
             software_id = request.POST.get('software_id')
             software_id = str(software_id.replace(' ', '+'))
             software_id = decrypt(software_id)
             software = SoftWare.objects.get(id=software_id)
-            if thumb_type == 'thumb':
-                if software:
+            if software:
+                metric_type = request.POST.get('metric_type')
+                if metric_type == 'download':
+                    software.download_volume += 1
+                elif metric_type == 'view':
+                    software.view_volume += 1
+                elif metric_type == 'thumb':
                     software.thumbs_volume += 1
-                    software.save()
-                    return JsonResponse({
-                        'code': 200
-                    })
-                else:
-                    return JsonResponse({
-                        'code': 404,
-                        'error': 'Error with not found software'
-                    })
-            elif thumb_type == 'de_thumb':
-                if software:
+                elif metric_type == 'de_thumb':
                     software.thumbs_volume -= 1
-                    software.save()
-                    return JsonResponse({
-                        'code': 200
-                    })
                 else:
                     return JsonResponse({
-                        'code': 404,
-                        'error': 'Error with not found software'
+                        'code': 400,
+                        'error': 'Error with invalid metric type'
                     })
-        except ValueError:
-            return JsonResponse({
-                'code': 401,
-                'error': 'Error with invalid params'
-            })
-        except TypeError:
-            return JsonResponse({
-                'code': 402,
-                'error': 'Error with wrong params'
-            })
-        except AttributeError:
-            return JsonResponse({
-                'code': 400,
-                'error': 'Error with bad params'
-            })
-        else:
-            return JsonResponse({
-                'code': 406,
-                'error': 'Error with bad request headers'
-            })
-    else:
-        return JsonResponse({
-            'code': 405,
-            'error': 'Error with bad request action'
-        })
-
-
-@router.path(pattern='api/download/')
-@require_POST
-def download(request):
-    if request.method == 'POST':
-        try:
-            software_id = request.POST.get('software_id')
-            software_id = str(software_id.replace(' ', '+'))
-            software_id = decrypt(software_id)
-            software = SoftWare.objects.get(id=software_id)
-            if software:
-                software.download_volume += 1
-                software.save()
-                return JsonResponse({
-                    'code': 200
-                })
-            else:
-                return JsonResponse({
-                    'code': 404,
-                    'error': 'Error with not found software'
-                })
-        except ValueError:
-            return JsonResponse({
-                'code': 401,
-                'error': 'Error with invalid params'
-            })
-        except TypeError:
-            return JsonResponse({
-                'code': 402,
-                'error': 'Error with wrong params'
-            })
-        except AttributeError:
-            return JsonResponse({
-                'code': 400,
-                'error': 'Error with bad params'
-            })
-    else:
-        return JsonResponse({
-            'code': 405,
-            'error': 'Error with bad request action'
-        })
-
-
-@router.path(pattern='api/view/')
-@require_POST
-def view(request):
-    if request.method == 'POST':
-        try:
-            software_id = request.POST.get('software_id')
-            software_id = str(software_id.replace(' ', '+'))
-            software_id = decrypt(software_id)
-            software = SoftWare.objects.get(id=software_id)
-            if software:
-                software.view_volume += 1
                 software.save()
                 return JsonResponse({
                     'code': 200

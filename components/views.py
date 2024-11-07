@@ -3,56 +3,39 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST, require_GET
 from django_router import router
 
-from general.data_handler import handle_uploaded_image, unload_image_from_server
+from general.data_handler import storage_uploaded_image, unload_image_from_server
 from general.init_cache import get_all_software, get_all_articles, get_all_user
 
 
 # Create your views here.
 
 
-@router.path(pattern='api/upload/article/image/')
 @require_POST
-def upload_article_image(request):
+def upload_image(request) -> JsonResponse:
     if request.method == 'POST':
         image = request.FILES.get('upload')
-        if image:
+        target = request.POST.get('target')
+        if image and target:
             try:
-                image_url = handle_uploaded_image(image, 'article/content/')
-                if image_url:
-                    return JsonResponse({'url': "/media/" + image_url})
+                path = 'article/content/' if target == 'article' else 'profile/' if target == 'profile' else None
+                if path:
+                    image_url = storage_uploaded_image(image, path)
+                    if image_url:
+                        return JsonResponse({'url': "/media/" + image_url})
+                    else:
+                        return JsonResponse({'error': {'message': 'Failed to upload image'}})
                 else:
-                    return JsonResponse({'error': {'message': 'Failed to upload image'}})
+                    return JsonResponse({'error': {'message': 'Invalid target'}})
             except Exception as e:
                 return JsonResponse({'error': {'message': str(e)}})
         else:
-            return JsonResponse({'error': {'message': 'No image found'}})
+            return JsonResponse({'error': {'message': 'No image or target found'}})
     else:
         return JsonResponse({'error': {'message': 'Invalid request method'}})
 
 
-@router.path(pattern='api/upload/profile/image/')
 @require_POST
-def upload_profile_image(request):
-    if request.method == 'POST':
-        image = request.FILES.get('upload')
-        if image:
-            try:
-                image_url = handle_uploaded_image(image, 'profile/')
-                if image_url:
-                    return JsonResponse({'url': "/media/" + image_url})
-                else:
-                    return JsonResponse({'error': {'message': 'Failed to upload image'}})
-            except Exception as e:
-                return JsonResponse({'error': {'message': str(e)}})
-        else:
-            return JsonResponse({'error': {'message': 'No image found'}})
-    else:
-        return JsonResponse({'error': {'message': 'Invalid request method'}})
-
-
-@router.path(pattern='api/unload/image/')
-@require_POST
-def unload_image(request):
+def unload_image(request) -> JsonResponse:
     if request.method == 'POST':
         image_url = request.POST.get('url')
         if image_url:
@@ -68,10 +51,9 @@ def unload_image(request):
 
 
 @require_GET
-def search_result(request):
+def search_result_page(request):
     if request.method == 'GET':
         search_str = request.GET.get('s')
-        matched_software = []
         if search_str:
             try:
                 matched_software = [
@@ -115,7 +97,7 @@ def search_result(request):
 
 
 @require_GET
-def home(request):
+def home_page(request):
     if request.method == 'GET':
         all_software = get_all_software()
         all_articles = get_all_articles()

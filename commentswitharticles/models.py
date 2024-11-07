@@ -14,7 +14,7 @@ class Comment(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
     created_time = models.DateTimeField(auto_now_add=True)
 
-    def short_content(self):
+    def short_content(self) -> str:
         max_length = 20
         if len(self.content) > max_length:
             return f"{self.content[:max_length]}..."
@@ -43,22 +43,28 @@ class Article(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
 
-    def short_title(self):
+    def short_title(self) -> str:
         max_length = 15
         if len(self.title) > max_length:
             return f"{self.title[:max_length]}..."
         return self.title
 
-    def html_content(self):
+    def html_content(self) -> str:
+        """
+        从已存储的md文档转换获取HTML内容
+        """
         md_content = markdown.markdown(self.content)
         return md_content
 
-    def plain_content(self):
+    def plain_content(self) -> str:
+        """
+        获取纯文本内容
+        """
         html_content = markdown.markdown(self.content)
         soup = bs4.BeautifulSoup(html_content, 'html.parser')
         return soup.get_text()
 
-    def short_content(self):
+    def short_content(self) -> str:
         max_length = 20
         if len(self.plain_content()) > max_length:
             return f"{self.plain_content()[:max_length]}..."

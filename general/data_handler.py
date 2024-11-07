@@ -3,23 +3,21 @@ import re
 from datetime import datetime
 
 
-def handle_uploaded_image(file, upload_to):
-    path = str("media/" + upload_to + datetime.now().strftime('%Y')
-               + "/" + datetime.now().strftime('%m'))
-    if not os.path.exists(path):
-        os.makedirs(path)
+def storage_uploaded_image(file, upload_to):
+    # 当前目录/media/upload_to/年/月/日
+    storage_absolute_dir = f"{os.getcwd()}/media/{upload_to}{datetime.now().strftime('%Y')}/{datetime.now().strftime('%m')}"
+    if not os.path.exists(storage_absolute_dir):
+        os.makedirs(storage_absolute_dir)
     if file is None:
         return None
     file_name = file.name
     if len(file_name) > 6:
         file_name = file.name[-6:]
-    path = (path + "/" +
-            str(datetime.now().strftime('%Y-%m-%d-%H-%M-%S-'))
-            + file_name)
-    with open(path, "wb") as destination:
+    storage_absolute_path = f"{storage_absolute_dir}/{str(datetime.now().strftime('%Y-%m-%d-%H-%M-%S-'))}{file_name}"
+    with open(storage_absolute_path, "wb") as destination:
         for chunk in file.chunks():
             destination.write(chunk)
-    return path.replace('media/', '')
+    return storage_absolute_path.replace('media/', '')
 
 
 def unload_image_from_server(url):

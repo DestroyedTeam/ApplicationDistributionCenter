@@ -6,7 +6,6 @@ from general.init_cache import get_notices
 from general.encrypt import encrypt, decrypt
 
 
-@router.path(pattern='api/notice/to/all/')
 @require_POST
 def get_notice_to_all(request):
     if request.method == 'POST':
@@ -31,7 +30,6 @@ def get_notice_to_all(request):
         return JsonResponse({'code': 401, 'msg': '请求方式错误'})
 
 
-@router.path(pattern='api/notice/to/specific/software/')
 @require_POST
 def get_specific_app_notice(request):
     if request.method == 'POST':

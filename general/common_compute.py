@@ -4,23 +4,23 @@ from sklearn.metrics.pairwise import cosine_similarity
 from general.encrypt import decrypt
 
 
-def get_hot_volume_of_article(article, get_type=1):
-    hot_volume: int = 0
+def get_article_hot_degree(article, get_type=1):
+    hot_degree: int = 0
     try:
         if get_type == 1:
-            hot_volume += article.updated_time.timestamp() / 1000000 + 10
-            hot_volume += article.view_volume * 10 + article.thumbs_volume * 50
-            hot_volume += article.comment_set.count() * 200
-            hot_volume += article.correlation_software.download_volume * 30
+            hot_degree += article.updated_time.timestamp() / 1000000 + 10
+            hot_degree += article.view_volume * 10 + article.thumbs_volume * 50
+            hot_degree += article.comment_set.count() * 200
+            hot_degree += article.correlation_software.download_volume * 30
         if get_type == 2:
             today = datetime.now().date()
             start_time = time(0, 0, 0)  # 设置开始时间为 00:00:00
             end_time = time(23, 59, 59)  # 设置结束时间为 23:59:59
             start_datetime = datetime.combine(today, start_time)  # 组合日期和时间，得到开始日期时间
             end_datetime = datetime.combine(today, end_time)  # 组合日期和时间，得到结束日期时间
-            hot_volume += (article.updated_time.timestamp() / 1000000 + 10) \
+            hot_degree += (article.updated_time.timestamp() / 1000000 + 10) \
                 if article.updated_time.date() == datetime.now().date() else 0
-            hot_volume += article.comment_set.all().filter(
+            hot_degree += article.comment_set.all().filter(
                 created_time__range=(start_datetime, end_datetime)).count() * 200
     except ValueError:
         pass
@@ -30,10 +30,10 @@ def get_hot_volume_of_article(article, get_type=1):
         pass
     except IndexError:
         pass
-    return int(hot_volume)
+    return int(hot_degree)
 
 
-def get_hot_volume_of_software(software, get_type=1):
+def get_software_hot_degree(software, get_type=1):
     hot_volume: int = 0
     try:
         if get_type == 1:
@@ -61,7 +61,7 @@ def get_hot_volume_of_software(software, get_type=1):
     return int(hot_volume)
 
 
-def get_context_articles(articles, article_id):
+def get_related_articles(articles, article_id):
     context_articles = {'previous': None, 'next': None}
     index = 0
     for i in range(len(articles)):
