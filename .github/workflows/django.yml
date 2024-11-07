@@ -29,3 +29,21 @@ jobs:
     - name: Run Tests
       run: |
         poetry run python manage.py test
+      env:
+        # Description: Environment variables for the application center service.
+        # Django debug mode
+        DEBUG: ${{ secrets.DEBUG }}
+        # Django secret key
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        
+        # mysql database configuration
+        MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+        MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        MYSQL_USER: ${{ secrets.MYSQL_USER }}
+        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        
+        # redis configuration
+        REDIS_HOST: ${{ secrets.REDIS_HOST }}
+        REDIS_PORT: ${{ secrets.REDIS_PORT }}
+        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
