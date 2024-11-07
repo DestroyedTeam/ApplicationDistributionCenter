@@ -1,0 +1,54 @@
+x-shared-database-env: &shared-web-env
+  # MySQL configuration
+  MYSQL_DATABASE: ${MYSQL_DATABASE:-application_center}
+  MYSQL_USER: ${MYSQL_USER:-application_center}
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD:-application_center}
+
+services:
+  application-center:
+    image: application-center:latest
+    environment:
+      # Django configuration
+      DEBUG: True
+      SECRET_KEY: ${SECRET_KEY:-test-secret-key}
+
+      # MySQL configuration
+      MYSQL_HOST: ${MYSQL_HOST:-application-center-db}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      <<: *shared-web-env
+
+      # Redis configuration
+      REDIS_HOST: application-center-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis
+    ports:
+      - "8080:8000"
+    depends_on:
+      application-center-db:
+        condition: service_healthy
+      application-center-redis:
+        condition: service_healthy
+
+  application-center-db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      <<: *shared-web-env
+    ports:
+        - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  application-center-redis:
+    image: redis:latest
+    command: redis-server --requirepass redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 10s
+        timeout: 5s
+        retries: 3
