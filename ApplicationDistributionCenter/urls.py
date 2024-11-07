@@ -40,7 +40,7 @@ urlpatterns = [
                   # NOTE: these re_path are both valid in development and production environment.
                   re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
                   re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
-                  re_path(r'^favicon.ico$', RedirectView.as_view(url=f'{settings.STATIC_ROOT}/favicon.ico')),
+                  re_path(r'^favicon.ico$', RedirectView.as_view(url=f'{settings.STATIC_ROOT if settings.STATIC_ROOT else settings.STATIC_URL}favicon.ico')),
                   path('center/all/control/', admin.site.urls),
                   path('', home),
                   path('index/', home),

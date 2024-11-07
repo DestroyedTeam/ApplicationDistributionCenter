@@ -163,3 +163,11 @@ cython_debug/
 
 docker/volumes/*
 volumes/*
+
+# repeated static files for git
+static/admin/
+static/error_handler/
+static/import_export/
+static/login/
+static/user_center/
+
