@@ -19,19 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, re_path, include
-from django.views.generic import RedirectView
 from django.views.static import serve
-from django_router import router as rt
-from analytics.views import index as ana, rank
-from announcements.views import *
-from testunit.views import *
-from software.views import *
-from category.views import *
-from commentswitharticles.views import *
-from questions.views import *
-from frontenduser.views import *
-from components.views import *
-from error_handler.views import *
 
 handler404 = custom_404_view
 handler500 = custom_500_view
@@ -40,9 +28,10 @@ urlpatterns = [
                   # NOTE: these re_path are both valid in development and production environment.
                   re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
                   re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
-                  re_path(r'^favicon.ico$', RedirectView.as_view(url=f'{settings.STATIC_ROOT if settings.STATIC_ROOT else settings.STATIC_URL}favicon.ico')),
+                  # 后台路由
                   path('center/all/control/', admin.site.urls),
 
+                  # 前台路由
                   path('', home_page),
                   path('index/', home_page),
                   path('analytics/', include('analytics.urls')),
@@ -52,7 +41,6 @@ urlpatterns = [
                   path('common/', include('components.urls')),
                   path('user/', include('frontenduser.urls')),
                   path('software/', include('software.urls')),
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + rt.urlpatterns
-document_root = settings.STATIC_ROOT
-# NOTE: The code behind `+` is only valid in development environment. In production environment, the code will not work.
-
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + \
+              static('/favicon.ico', document_root=f"{settings.STATIC_ROOT if settings.STATIC_ROOT else settings.STATICFILES_DIRS[0]}/favicon.ico")
+# NOTE: 加号后边的代码都是选择执行路由

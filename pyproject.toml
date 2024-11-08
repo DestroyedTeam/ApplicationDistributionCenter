@@ -5,7 +5,6 @@ description = ""
 authors = ["VincentAdamNemessis <vincentadamnemessis@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-package-mode=false
 
 [virtualenvs]
 create=true
@@ -36,3 +35,18 @@ gunicorn = "^23.0.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
+
+[[tool.poetry.source]]
+name = "tencent"
+url = "https://mirrors.cloud.tencent.com/pypi/simple/"
+default = false
+
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = false

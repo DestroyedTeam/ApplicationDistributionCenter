@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -144,12 +145,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-# NOTE: STATIC_ROOT is not used in development
-# STATIC_ROOT = 'static'
-# NOTE: STATICFILES_DIRS is not used in production
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
+if env('DEBUG', default=True):
+    # NOTE: STATICFILES_DIRS is only used in development
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static')
+    ]
+else:
+    # NOTE: STATIC_ROOT is only used in production
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
@@ -158,6 +161,9 @@ MEDIA_URL = '/media/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Additional Config
+GZIP_MIN_LENGTH = 500  # GZip middleware min length
 
 # simpleui that backend settings
 SIMPLEUI_HOME_PAGE = '/analytics/backstage-overview'
