@@ -25,20 +25,3 @@ def pad(s):
 
 def un_pad(s):
     return s[:-ord(s[len(s) - 1:])]
-
-
-# def test():
-#     # key = b'frontendencryptx'
-#     # iv = b'frontendencryptx'
-#     instr = str(1)
-#     print(encrypt(instr))
-#     print(decrypt(encrypt(instr)))
-# test()
-
-# def generate_key():
-#     key = b'frontendencryptx'
-#     iv = b'frontendencryptx'
-#     print()
-#
-# generate_key()
-

@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST, require_http_methods, req
 from django_router import router
 
 from commentswitharticles.models import Article
-from general.common_compute import get_context_articles, compute_similarity
+from general.common_compute import get_related_articles, compute_similarity
 from general.data_handler import get_image_urls_from_md_str
 from general.encrypt import decrypt, encrypt
 from general.init_cache import (get_comments, get_all_user,
@@ -18,13 +18,11 @@ from software.models import SoftWare
 not_in_init_comments_parent = set()
 
 
-@router.path(pattern='api/get/init/comments/')
-@require_http_methods('POST')
-def get_init_comments(request):
+@require_POST
+def get_comments_data(request):
     comments = get_comments()
     if request.method == "POST":
         if comments:
-            # filter specifc article or software
             try:
                 post_data = json.loads(request.body)
                 query_id = decrypt(post_data['query_id'].replace(' ', '+'))
@@ -50,7 +48,15 @@ def get_init_comments(request):
             if type == 'software':
                 comments = [comment for comment in comments
                             if comment.correlation_software and comment.correlation_software.id == int(query_id)]
-            comments = comments[:10]
+            if 'load_more' in post_data and post_data['load_more']:
+                comments = [t for t in comments if encrypt(str(t.id)).decode('utf8')
+                            not in not_in_init_comments_parent]
+                if len(comments) < 10:
+                    comments = None
+                else:
+                    comments = comments[10:]
+            else:
+                comments = comments[:10]
             if len(comments) <= 0:
                 return JsonResponse({
                     'code': 404,
@@ -121,96 +127,9 @@ def get_init_comments(request):
         })
 
 
-@router.path(pattern='api/load/more/comments/')
-@require_POST
-def load_more_comments(request):
-    comments = [t for t in get_comments() if encrypt(str(t.id)).decode('utf8')
-                not in not_in_init_comments_parent]
-    if request.method == "POST":
-        if comments:
-            # filter anything, just like specifc article or software
-            try:
-                post_data = json.loads(request.body)
-                query_id = decrypt(post_data['query_id'].encode())
-                type = post_data['type']
-            except ValueError:
-                return JsonResponse({
-                    'code': 402,
-                    'msg': 'failed with invalid params'
-                })
-            except TypeError:
-                return JsonResponse({
-                    'code': 407,
-                    'msg': 'failed with wrong params'
-                })
-            except AttributeError:
-                return JsonResponse({
-                    'code': 401,
-                    'msg': 'failed with bad request body'
-                })
-            if type == 'article':
-                comments = [comment for comment in comments
-                            if comment.correlation_article and comment.correlation_article.id == int(query_id)]
-            if type == 'software':
-                comments = [comment for comment in comments
-                            if comment.correlation_software and comment.correlation_software.id == int(query_id)]
-            if len(comments) < 10:
-                comments = None
-            else:
-                comments = comments[10:]
-        else:
-            return JsonResponse({
-                'code': 401,
-                'msg': 'failed with wrong params'
-            })
-        if comments:
-            if comments:
-                comments = [
-                    {
-                        'comment_id': encrypt(str(comment.id)).decode('utf-8'),
-                        'user': {
-                            'user_id': encrypt(str(comment.user.id)).decode('utf-8'),
-                            'username': comment.user.nickname if comment.user.nickname else comment.user.username,
-                            'head_icon': comment.user.head_icon.url,
-                            'role': comment.user.role,
-                        },
-                        'content': comment.content,
-                        'correlation_article': comment.correlation_article.title if comment.correlation_article else '',
-                        'correlation_software': comment.correlation_software.name if comment.correlation_software else '',
-                        'created_time': comment.created_time.strftime('%Y-%m-%d %H:%M:%S'),
-                        'parent_id': encrypt(str(comment.parent.id)).decode('utf-8') if comment.parent else encrypt(
-                            str(0)).decode('utf-8')
-                    }
-                    for comment in comments
-                ]
-                return JsonResponse({
-                    'code': 200,
-                    'msg': 'success',
-                    'data': {
-                        'comments': comments
-                    }
-                })
-            else:
-                return JsonResponse({
-                    'code': 404,
-                    'msg': 'failed with no data'
-                })
-        else:
-            return JsonResponse({
-                'code': 404,
-                'msg': 'failed with no data'
-            })
-    else:
-        return JsonResponse({
-            'code': 301,
-            'msg': 'failed with wrong request action'
-        })
-
-
 @login_required
 @require_POST
-@router.path('api/publish/comment/')
-def leave_comment(request):
+def publish_comment(request):
     if request.method == 'POST':
         try:
             user = [mat_user for mat_user in get_all_user()
@@ -219,7 +138,7 @@ def leave_comment(request):
                 user = user[0]
             else:
                 return JsonResponse({
-                    'code': 404,
+                    'code': 403,
                     'msg': '请先登录'
                 })
             content = request.POST.get('comment')
@@ -277,15 +196,12 @@ def leave_comment(request):
         })
 
 
-@router.path(pattern='api/get/articles/')
-# @require_POST
+@require_http_methods(["GET", "POST"])
 def get_articles(request):
     articles = g_as()
-    # if request.method == "POST":
     if request.method == "GET":
         try:
             if request.GET.get('page_num'):
-                # if request.POST.get('page_num'):
                 page_num = int(request.GET.get('page_num'))
             elif request.POST.get('page_num') is None:
                 page_num = 1
@@ -337,61 +253,8 @@ def get_articles(request):
                 'code': 404,
                 'msg': 'failed with no data'
             })
-    else:
-        return JsonResponse({
-            'code': 301,
-            'msg': 'failed with wrong request action'
-        })
-
-
-@router.path('publish/')
-def publish_article_and_software_page(request):
-    if request.method == "GET":
-        all_software = g_a_s()
-        try:
-            type = request.GET.get('type')
-            if int(type) == 1:
-                return render(request, 'front/publish_article.html', {
-                    'all_software': all_software
-                })
-            elif int(type) == 2:
-                return render(request, 'front/publish_software.html', {
-                })
-            else:
-                return render(request, '500.html', {
-                    'error': '请求参数错误'
-                })
-        except ValueError:
-            return render(request, '500.html', {
-                'error': '请求参数错误'
-            })
-        except TypeError:
-            return render(request, '500.html', {
-                'error': '请求参数错误'
-            })
-
-
-@require_GET
-def articles_list(request):
-    if request.method == "GET":
-        articles = g_as()
-        articles_count = len(articles)
-        return render(request, 'articles_list.html',
-                      {
-                          'articles': articles[:6],
-                          'articles_count': articles_count
-                      })
-    return render(request, '500.html', {
-        'code': 405,
-        'error': 'requested with wrong method'
-    })
-
-
-@require_POST
-@router.path(pattern='api/load/left/articles/')
-def load_left_articles(request):
-    if request.method == 'POST':
-        articles = g_as()[6:]
+    elif request.method == "POST":
+        articles = articles[6:]
         articles = [{
             'id': article.id,
             'title': article.title,
@@ -419,13 +282,55 @@ def load_left_articles(request):
             })
     else:
         return JsonResponse({
-            'code': 405,
+            'code': 301,
             'msg': 'failed with wrong request action'
         })
 
 
+def publish_page(request):
+    if request.method == "GET":
+        all_software = g_a_s()
+        try:
+            type = request.GET.get('type')
+            if int(type) == 1:
+                return render(request, 'front/publish_article.html', {
+                    'all_software': all_software
+                })
+            elif int(type) == 2:
+                return render(request, 'front/publish_software.html', {
+                })
+            else:
+                return render(request, '500.html', {
+                    'error': '请求参数错误'
+                })
+        except ValueError:
+            return render(request, '500.html', {
+                'error': '请求参数错误'
+            })
+        except TypeError:
+            return render(request, '500.html', {
+                'error': '请求参数错误'
+            })
+
+
 @require_GET
-def article_details(request):
+def articles_page(request):
+    if request.method == "GET":
+        articles = g_as()
+        articles_count = len(articles)
+        return render(request, 'articles_list.html',
+                      {
+                          'articles': articles[:6],
+                          'articles_count': articles_count
+                      })
+    return render(request, '500.html', {
+        'code': 405,
+        'error': 'requested with wrong method'
+    })
+
+
+@require_GET
+def article_page(request):
     if request.method == 'GET':
         articles = g_as()
         try:
@@ -459,7 +364,7 @@ def article_details(request):
                                 if article.id == article_id and article.correlation_software]
             related_articles_count = len(related_articles)
             related_software_count = len(related_software)
-            context_articles = get_context_articles(articles, article_id)
+            context_articles = get_related_articles(articles, article_id)
         else:
             return render(request, 'article_details.html', {
                 'error': 'Not found article',
@@ -481,9 +386,8 @@ def article_details(request):
         })
 
 
-@router.path(pattern='api/thumb/article/')
 @require_POST
-def thumb(request):
+def thumb_article(request):
     if request.method == 'POST':
         try:
             post_data = json.loads(request.body)
@@ -543,7 +447,6 @@ def thumb(request):
         })
 
 
-@router.path(pattern='api/publish/article/')
 @require_POST
 def publish_article(request):
     if request.method == 'POST':
@@ -614,9 +517,8 @@ def publish_article(request):
         })
 
 
-@router.path(pattern='article/api/view/')
 @require_POST
-def view_article(request):
+def viewed_article(request):
     if request.method == 'POST':
         try:
             article_id = request.POST.get('article_id')

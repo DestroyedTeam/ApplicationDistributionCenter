@@ -18,6 +18,7 @@ class AppendMiddleware(MiddlewareMixin):
         request.hot_articles, request.hot_software = hot_articles[:3], hot_software[:3]
         request.categories = get_all_category()
         if request.user.is_authenticated:
+            # TODO: Updated routes, here will be update too.
             if '/article/details/' in request.path or '/software/details/' in request.path:
                 update_user_recent(request.session.get('logon_user'), request.GET.get('article_id'), request.GET.get('software_id'))
 

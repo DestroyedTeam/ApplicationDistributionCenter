@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.utils import timezone
 from zoneinfo import ZoneInfo
 from django.db import models
-from general.common_compute import get_hot_volume_of_software
+from general.common_compute import get_software_hot_degree
 from frontenduser.models import FrontEndUser
 
 
@@ -54,7 +54,7 @@ class SoftWare(models.Model):
 
     def is_hot(self):
         # 返回一个布尔值，表示该软件是否是热门软件
-        return get_hot_volume_of_software(self, 1) > 30000
+        return get_software_hot_degree(self, 1) > 30000
 
     class SoftwareScreenShots(models.Model):
         id = models.AutoField(primary_key=True)

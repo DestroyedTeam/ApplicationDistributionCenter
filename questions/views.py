@@ -13,7 +13,7 @@ from questions.models import Questions
 
 
 @require_GET
-def init_questions(request):
+def question_list_page(request):
     if request.method == 'GET':
         all_question = sorted(sorted(get_all_questions(), key=lambda q: q.state, reverse=False),
                               key=lambda q: q.updated_time, reverse=True)
@@ -30,9 +30,8 @@ def init_questions(request):
     })
 
 
-@router.path('api/get/left/questions/')
 @require_POST
-def load_left_questions(request):
+def get_questions(request):
     if request.method == 'POST':
         all_question = sorted(sorted(get_all_questions(), key=lambda q: q.state, reverse=False),
                               key=lambda q: q.updated_time, reverse=True)
@@ -52,9 +51,8 @@ def load_left_questions(request):
     return JsonResponse({'code': 403, 'error': '请求方式不正确，未能找到页面'})
 
 
-@router.path('question/details/')
 @require_GET
-def question_details(request):
+def question_detail_page(request):
     if request.method == 'GET':
         try:
             question_id = request.GET.get('question_id').replace(' ', '+')
@@ -95,7 +93,6 @@ def question_details(request):
 
 @require_POST
 @login_required
-@router.path('api/adopt/answer/')
 def adopt_answer(request):
     if request.method == 'POST':
         try:
@@ -124,8 +121,7 @@ def adopt_answer(request):
 
 @require_POST
 @login_required
-@router.path('api/publish/answer/')
-def publish_answer(request):
+def answer_question(request):
     if request.method == 'POST':
         try:
             question_id = int(request.POST.get('question_id'))
@@ -144,8 +140,7 @@ def publish_answer(request):
 
 @require_POST
 @login_required
-@router.path('api/publish/question/')
-def publish_question(request):
+def ask_question(request):
     if request.method == 'POST':
         try:
             post_data = json.loads(request.body)

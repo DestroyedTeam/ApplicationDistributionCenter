@@ -7,9 +7,13 @@ x-shared-database-env: &shared-web-env
 services:
   application-center:
     image: application-center:latest
+    build:
+        # dockerfile的寻找基于context查找
+        context: ../
+        dockerfile: Dockerfile
     environment:
       # Django configuration
-      DEBUG: True
+      DEBUG: FALSE
       SECRET_KEY: ${SECRET_KEY:-test-secret-key}
 
       # MySQL configuration

@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from django.shortcuts import render
+from django.views.decorators.cache import cache_page
 from pyecharts import options as opts
 from pyecharts.charts import Bar
 
 from frontenduser.models import FrontEndUser
-from general.common_compute import (get_hot_volume_of_article as g_h_a,
-                                    get_hot_volume_of_software as g_h_s)
+from general.common_compute import (get_article_hot_degree as g_h_a,
+                                    get_software_hot_degree as g_h_s)
 from general.init_cache import get_all_articles as g_a_as, get_all_software as g_a_s, get_all_user as g_a_u, \
     get_comments
 
@@ -32,8 +33,8 @@ def index(request):
                                     [i.thumbs_volume for i in g_a_s()])}
     # 创建一个图表对象
     bar = Bar()
-    sorted_software = sorted([s for s in g_a_s()], key=lambda x: g_h_s(x, 1), reverse=True)
-    x_list, y_list = [s.name for s in sorted_software][:10], [g_h_s(s, 1) for s in sorted_software][:10]
+    sorted_software = sorted([s for s in g_a_s()], key=lambda x: g_h_s(x), reverse=True)
+    x_list, y_list = [s.name for s in sorted_software][:10], [g_h_s(s) for s in sorted_software][:10]
     bar.add_xaxis(x_list)
     bar.add_yaxis("热度", y_list)
     sorted_software = sorted(sorted_software, key=lambda x: x.download_volume, reverse=True)
@@ -57,71 +58,43 @@ def index(request):
                   })
 
 
-# @cache_page(60 * 15)
+@cache_page(30)
 def rank(request):
     all_articles, all_software = g_a_as(), g_a_s()
     today_date = datetime.now().date()
-    # compute up and coming star of today
-    today_up_and_coming_star_articles, today_up_and_coming_star_software = \
-        ([article for article in all_articles if article.updated_time.date() == today_date],
-         [software for software in all_software if software.updated_time.date() == today_date])
-    today_up_and_coming_star_articles, today_up_and_coming_star_software = \
-        (sorted(today_up_and_coming_star_articles, key=lambda x: x.updated_time, reverse=True)[:10],
-         sorted(today_up_and_coming_star_software, key=lambda x: x.updated_time, reverse=True)[:10])
-    if len(today_up_and_coming_star_software) < 10:
-        today_up_and_coming_star_software += [None] * (10 - len(today_up_and_coming_star_software))
-    if len(today_up_and_coming_star_articles) < 10:
-        today_up_and_coming_star_articles += [None] * (10 - len(today_up_and_coming_star_articles))
-    today_popularity_articles, today_popularity_software = (all_articles, all_software)
-    for i in today_popularity_articles:
-        i.popularity = g_h_a(i, 2)
-    for i in today_popularity_software:
-        i.popularity = g_h_s(i, 2)
 
-    # compute popularity of today
-    today_popularity_articles, today_popularity_software = (
-        sorted(today_popularity_articles, key=lambda x: x.popularity, reverse=True)[:10],
-        sorted(today_popularity_software, key=lambda x: x.popularity, reverse=True)[:10])
-    for i in today_popularity_articles:
-        if i.popularity <= 0:
-            today_popularity_articles.remove(i)
-    for i in today_popularity_software:
-        if i.popularity <= 0:
-            today_popularity_software.remove(i)
-    if len(today_popularity_articles) < 10:
-        today_popularity_articles += [None] * (10 - len(today_popularity_articles))
-    if len(today_popularity_software) < 10:
-        today_popularity_software += [None] * (10 - len(today_popularity_software))
+    def get_top_items(items, key_func, top_n=10):
+        sorted_items = sorted(items, key=key_func, reverse=True)[:top_n]
+        if len(sorted_items) < top_n:
+            sorted_items += [None] * (top_n - len(sorted_items))
+        return sorted_items
 
-    # compute up and coming star of all time
-    all_time_up_and_coming_star_articles, all_time_up_and_coming_star_software = (all_articles, all_software)
-    all_time_up_and_coming_star_articles, all_time_up_and_coming_star_software = (
-        sorted(all_time_up_and_coming_star_articles, key=lambda x: x.updated_time, reverse=True)[:10],
-        sorted(all_time_up_and_coming_star_software, key=lambda x: x.updated_time, reverse=True)[:10])
-    if len(all_time_up_and_coming_star_software) < 10:
-        all_time_up_and_coming_star_software += [None] * (10 - len(all_time_up_and_coming_star_software))
-    if len(all_time_up_and_coming_star_articles) < 10:
-        all_time_up_and_coming_star_articles += [None] * (10 - len(all_time_up_and_coming_star_articles))
+    def filter_and_sort(items, date_field, date_value, key_func, top_n=10):
+        filtered_items = [single_item for single_item in items if getattr(single_item, date_field).date() == date_value]
+        return get_top_items(filtered_items, key_func, top_n)
 
-    # compute popularity of all time
-    all_time_popularity_articles, all_time_popularity_software = (all_articles, all_software)
-    for i in all_time_popularity_articles:
-        i.popularity = g_h_a(i, 1)
-    for i in all_time_popularity_software:
-        i.popularity = g_h_s(i, 1)
-    all_time_popularity_articles, all_time_popularity_software = (
-        sorted(all_time_popularity_articles, key=lambda x: x.popularity, reverse=True)[:10],
-        sorted(all_time_popularity_software, key=lambda x: x.popularity, reverse=True)[:10])
-    for i in all_time_popularity_articles:
-        if i.popularity <= 0:
-            all_time_popularity_articles.remove(i)
-    for i in all_time_popularity_software:
-        if i.popularity <= 0:
-            all_time_popularity_software.remove(i)
-    if len(all_time_popularity_articles) < 10:
-        all_time_popularity_articles += [None] * (10 - len(all_time_popularity_articles))
-    if len(all_time_popularity_software) < 10:
-        all_time_popularity_software += [None] * (10 - len(all_time_popularity_software))
+    today_up_and_coming_star_articles = filter_and_sort(all_articles, 'updated_time', today_date, lambda x: x.updated_time)
+    today_up_and_coming_star_software = filter_and_sort(all_software, 'updated_time', today_date, lambda x: x.updated_time)
+
+    for item in all_articles:
+        item.popularity = g_h_a(item, 2)
+    for item in all_software:
+        item.popularity = g_h_s(item, 2)
+
+    today_popularity_articles = get_top_items([item for item in all_articles if item.popularity > 0], lambda x: x.popularity)
+    today_popularity_software = get_top_items([item for item in all_software if item.popularity > 0], lambda x: x.popularity)
+
+    all_time_up_and_coming_star_articles = get_top_items(all_articles, lambda x: x.updated_time)
+    all_time_up_and_coming_star_software = get_top_items(all_software, lambda x: x.updated_time)
+
+    for item in all_articles:
+        item.popularity = g_h_a(item)
+    for item in all_software:
+        item.popularity = g_h_s(item)
+
+    all_time_popularity_articles = get_top_items([item for item in all_articles if item.popularity > 0], lambda x: x.popularity)
+    all_time_popularity_software = get_top_items([item for item in all_software if item.popularity > 0], lambda x: x.popularity)
+
     return render(request, 'rank.html', {
         'today_up_and_coming_star_articles': today_up_and_coming_star_articles,
         'today_up_and_coming_star_software': today_up_and_coming_star_software,

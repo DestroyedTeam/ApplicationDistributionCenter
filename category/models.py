@@ -10,13 +10,13 @@ class Category(models.Model):
     description = models.TextField(blank=True, null=True)
     state = models.IntegerField(default=2, choices=((1, '停用'), (2, '正常')), db_index=True)
 
-    def short_name(self):
+    def short_name(self) -> str:
         max_length = 15
         if len(self.name) > max_length:
             return f"{self.name[:max_length]}..."
         return self.name
 
-    def short_description(self):
+    def short_description(self) -> str:
         max_length = 20
         if len(self.description) > max_length:
             return f"{self.description[:max_length]}..."
