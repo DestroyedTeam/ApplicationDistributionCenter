@@ -37,7 +37,7 @@ urlpatterns = (
         path("", home_page),
         path("index/", home_page),
         path("analytics/", include("analytics.urls")),
-        path("notices/", include("announcements.urls")),
+        path("notice/", include("announcements.urls")),
         path("category/", include("category.urls")),
         path("content/", include("commentswitharticles.urls")),
         path("common/", include("components.urls")),

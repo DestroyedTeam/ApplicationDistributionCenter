@@ -388,22 +388,6 @@ url = "https://mirrors.aliyun.com/pypi/simple"
 reference = "aliyun"
 
 [[package]]
-name = "django-router"
-version = "1.0.8"
-description = "Use simple decorators on views instead of maintaining lengthy urls.py"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "django_router-1.0.8-py3-none-any.whl", hash = "sha256:aaea5aa938488475dacca271a87d13f77012ca097c75530c0f42eea1234b73f6"},
-    {file = "django_router-1.0.8.tar.gz", hash = "sha256:6c9675f37c0eee70c02fc42c4260eb0b13c4940c6a331a83a7f184dbe3dbab57"},
-]
-
-[package.source]
-type = "legacy"
-url = "https://mirrors.aliyun.com/pypi/simple"
-reference = "aliyun"
-
-[[package]]
 name = "django-simpleui"
 version = "2024.10.25"
 description = "django admin theme 后台模板"
@@ -1485,4 +1469,4 @@ reference = "aliyun"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d603a29a9df54b64de2033e3c8f22cc28ec1146d948514d2570b82402fb4b0d4"
+content-hash = "08ded7b5b2be0bfbc06e9fc412d80aaebd2c8cec2b77de1ffe641039459303c8"
