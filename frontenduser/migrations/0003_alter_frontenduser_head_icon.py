@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('frontenduser', '0002_frontenduser_head_icon'),
+        ("frontenduser", "0002_frontenduser_head_icon"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='frontenduser',
-            name='head_icon',
-            field=models.ImageField(default='user/default_head_icon.ico', upload_to='user'),
+            model_name="frontenduser",
+            name="head_icon",
+            field=models.ImageField(default="user/default_head_icon.ico", upload_to="user"),
         ),
     ]

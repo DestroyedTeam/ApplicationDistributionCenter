@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('frontenduser', '0014_frontenduser_user_center_cover'),
+        ("frontenduser", "0014_frontenduser_user_center_cover"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='frontenduser',
-            name='user_center_cover',
-            field=models.ImageField(default='user/user_center/default.svg', upload_to='user/user_center'),
+            model_name="frontenduser",
+            name="user_center_cover",
+            field=models.ImageField(default="user/user_center/default.svg", upload_to="user/user_center"),
         ),
     ]

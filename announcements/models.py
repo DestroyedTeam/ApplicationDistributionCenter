@@ -8,19 +8,20 @@ class Announcements(models.Model):
     公告模型基本定义，形似sqlmodel或者sqlalchemy的模型定义
     不过在实际使用过程中比较简单，只需要继承models.Model即可
     """
+
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
     content = models.TextField()
-    image = models.ImageField(upload_to='announcements', null=True, blank=True)
+    image = models.ImageField(upload_to="announcements", null=True, blank=True)
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    type = models.IntegerField(default=1, choices=((1, '全站'), (2, '指定APP')))
-    app = models.ForeignKey('software.SoftWare', on_delete=models.CASCADE, null=True, blank=True)
+    type = models.IntegerField(default=1, choices=((1, "全站"), (2, "指定APP")))
+    app = models.ForeignKey("software.SoftWare", on_delete=models.CASCADE, null=True, blank=True)
     created_time = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs) -> None:
         # 如果没有指定 author，就使用当前登录的后台用户
         if not self.author:
-            self.author = kwargs.pop('request').user
+            self.author = kwargs.pop("request").user
         super().save(*args, **kwargs)
 
     def short_title(self) -> str:
@@ -39,8 +40,8 @@ class Announcements(models.Model):
         return self.content
 
     class Meta:
-        ordering = ['-created_time']
-        verbose_name = '公告管理'
+        ordering = ["-created_time"]
+        verbose_name = "公告管理"
         verbose_name_plural = verbose_name
 
     def __str__(self):

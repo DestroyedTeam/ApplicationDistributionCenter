@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from . import views
 
@@ -8,7 +8,6 @@ urlpatterns = [
     path("logout", views.logout_page, name="logout page"),
     path("", views.user_detail_page, name="user detail page"),
     path("detail", views.user_detail_page, name="user detail page"),
-
     # API路由
     path("api/login", views.login, name="login api"),
     path("api/register", views.register, name="register api"),

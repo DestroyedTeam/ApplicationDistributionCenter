@@ -1,15 +1,16 @@
 import base64
+
 from Crypto.Cipher import AES
 
 
-def encrypt(instr, key=b'frontendencryptx', iv=b'frontendencryptx'):
+def encrypt(instr, key=b"frontendencryptx", iv=b"frontendencryptx"):
     temp_str = pad(instr)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     ret = base64.b64encode(cipher.encrypt(temp_str))
     return ret
 
 
-def decrypt(instr, key=b'frontendencryptx', iv=b'frontendencryptx'):
+def decrypt(instr, key=b"frontendencryptx", iv=b"frontendencryptx"):
     instr = base64.b64decode(instr)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     ret = un_pad(cipher.decrypt(instr))
@@ -24,4 +25,4 @@ def pad(s):
 
 
 def un_pad(s):
-    return s[:-ord(s[len(s) - 1:])]
+    return s[: -ord(s[len(s) - 1 :])]

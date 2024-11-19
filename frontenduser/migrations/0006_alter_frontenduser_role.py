@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('frontenduser', '0005_alter_frontenduser_role'),
+        ("frontenduser", "0005_alter_frontenduser_role"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='frontenduser',
-            name='role',
-            field=models.CharField(choices=[('普通用户', '普通用户'), ('管理员', '管理员'), ('写手', '写手'), ('开发者', '开发者'), ('站长', '站长')], default='普通用户', max_length=50),
+            model_name="frontenduser",
+            name="role",
+            field=models.CharField(
+                choices=[
+                    ("普通用户", "普通用户"),
+                    ("管理员", "管理员"),
+                    ("写手", "写手"),
+                    ("开发者", "开发者"),
+                    ("站长", "站长"),
+                ],
+                default="普通用户",
+                max_length=50,
+            ),
         ),
     ]

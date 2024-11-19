@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('commentswitharticles', '0002_initial'),
+        ("commentswitharticles", "0002_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='article',
-            name='thumbs_volume',
+            model_name="article",
+            name="thumbs_volume",
             field=models.BigIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='article',
-            name='view_volume',
+            model_name="article",
+            name="view_volume",
             field=models.BigIntegerField(default=0),
         ),
     ]

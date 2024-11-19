@@ -1,6 +1,8 @@
 from datetime import datetime, time
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
 from general.encrypt import decrypt
 
 
@@ -18,10 +20,14 @@ def get_article_hot_degree(article, get_type=1):
             end_time = time(23, 59, 59)  # 设置结束时间为 23:59:59
             start_datetime = datetime.combine(today, start_time)  # 组合日期和时间，得到开始日期时间
             end_datetime = datetime.combine(today, end_time)  # 组合日期和时间，得到结束日期时间
-            hot_degree += (article.updated_time.timestamp() / 1000000 + 10) \
-                if article.updated_time.date() == datetime.now().date() else 0
-            hot_degree += article.comment_set.all().filter(
-                created_time__range=(start_datetime, end_datetime)).count() * 200
+            hot_degree += (
+                (article.updated_time.timestamp() / 1000000 + 10)
+                if article.updated_time.date() == datetime.now().date()
+                else 0
+            )
+            hot_degree += (
+                article.comment_set.all().filter(created_time__range=(start_datetime, end_datetime)).count() * 200
+            )
     except ValueError:
         pass
     except TypeError:
@@ -48,10 +54,14 @@ def get_software_hot_degree(software, get_type=1):
             end_time = time(23, 59, 59)
             start_datetime = datetime.combine(today, start_time)
             end_datetime = datetime.combine(today, end_time)
-            hot_volume += (software.updated_time.timestamp() / 1000000 + 10) \
-                if software.updated_time.date() == datetime.now().date() else 0
-            hot_volume += software.comment_set.all().filter(
-                created_time__range=(start_datetime, end_datetime)).count() * 100
+            hot_volume += (
+                (software.updated_time.timestamp() / 1000000 + 10)
+                if software.updated_time.date() == datetime.now().date()
+                else 0
+            )
+            hot_volume += (
+                software.comment_set.all().filter(created_time__range=(start_datetime, end_datetime)).count() * 100
+            )
     except ValueError:
         pass
     except TypeError:
@@ -62,16 +72,16 @@ def get_software_hot_degree(software, get_type=1):
 
 
 def get_related_articles(articles, article_id):
-    context_articles = {'previous': None, 'next': None}
+    context_articles = {"previous": None, "next": None}
     index = 0
     for i in range(len(articles)):
         if articles[i].id == article_id:
             index = i
             break
     if index > 0:
-        context_articles['previous'] = articles[index - 1]
+        context_articles["previous"] = articles[index - 1]
     if index < len(articles) - 1:
-        context_articles['next'] = articles[index + 1]
+        context_articles["next"] = articles[index + 1]
     # print(context_articles)
     return context_articles
 
@@ -86,25 +96,38 @@ def compute_similarity(str1, str2):
 
 def update_user_recent(user, article_id, software_id):
     from commentswitharticles.models import Article
-    from software.models import SoftWare
     from frontenduser.models import FrontEndUser
-    article_id = int(decrypt(article_id.replace(' ', '+'))) if article_id else None
-    software_id = int(decrypt(software_id.replace(' ', '+'))) if software_id else None
+    from software.models import SoftWare
+
+    article_id = int(decrypt(article_id.replace(" ", "+"))) if article_id else None
+    software_id = int(decrypt(software_id.replace(" ", "+"))) if software_id else None
     try:
         if user and article_id:
-            if FrontEndUser.RecentBrowsing.objects.all().values('article').filter(user=user, article=Article.objects.get(id=article_id)).count() > 0:
+            if (
+                FrontEndUser.RecentBrowsing.objects.all()
+                .values("article")
+                .filter(user=user, article=Article.objects.get(id=article_id))
+                .count()
+                > 0
+            ):
                 return True
             FrontEndUser.RecentBrowsing.objects.create(user=user, article=Article.objects.get(id=article_id))
             return True
         if user and software_id:
-            if FrontEndUser.RecentBrowsing.objects.all().values('software').filter(user=user, software=SoftWare.objects.get(id=software_id)).count() > 0:
+            if (
+                FrontEndUser.RecentBrowsing.objects.all()
+                .values("software")
+                .filter(user=user, software=SoftWare.objects.get(id=software_id))
+                .count()
+                > 0
+            ):
                 return True
             FrontEndUser.RecentBrowsing.objects.create(user=user, software=SoftWare.objects.get(id=software_id))
             return True
     except Article.DoesNotExist:
-        return False, 'Article does not exist or valid'
+        return False, "Article does not exist or valid"
     except SoftWare.DoesNotExist:
-        return False, 'Software does not exist or valid'
+        return False, "Software does not exist or valid"
     except FrontEndUser.DoesNotExist:
-        return False, 'User does not exist or valid'
-    return False, 'Unknown error'
+        return False, "User does not exist or valid"
+    return False, "Unknown error"

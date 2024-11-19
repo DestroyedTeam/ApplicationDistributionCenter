@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('frontenduser', '0007_frontenduser_nickname'),
+        ("frontenduser", "0007_frontenduser_nickname"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='frontenduser',
-            name='state',
-            field=models.IntegerField(choices=[(1, '正常'), (2, '封禁')], default=1),
+            model_name="frontenduser",
+            name="state",
+            field=models.IntegerField(choices=[(1, "正常"), (2, "封禁")], default=1),
         ),
     ]

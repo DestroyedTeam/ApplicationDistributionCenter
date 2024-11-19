@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('commentswitharticles', '0005_alter_article_cover'),
+        ("commentswitharticles", "0005_alter_article_cover"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='article',
-            name='created_time',
+            model_name="article",
+            name="created_time",
             field=models.DateField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='article',
-            name='updated_time',
+            model_name="article",
+            name="updated_time",
             field=models.DateField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name='comment',
-            name='created_time',
+            model_name="comment",
+            name="created_time",
             field=models.DateField(auto_now_add=True),
         ),
     ]

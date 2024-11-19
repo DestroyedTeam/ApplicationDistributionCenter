@@ -4,27 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Announcements',
+            name="Announcements",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('title', models.CharField(max_length=200)),
-                ('content', models.TextField()),
-                ('image', models.ImageField(blank=True, null=True, upload_to='announcements')),
-                ('type', models.IntegerField(choices=[(1, '全站'), (2, '指定APP')], default=1)),
-                ('created_time', models.DateTimeField(auto_now=True)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("title", models.CharField(max_length=200)),
+                ("content", models.TextField()),
+                ("image", models.ImageField(blank=True, null=True, upload_to="announcements")),
+                ("type", models.IntegerField(choices=[(1, "全站"), (2, "指定APP")], default=1)),
+                ("created_time", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': '公告管理',
-                'verbose_name_plural': '公告管理',
-                'ordering': ['-created_time'],
+                "verbose_name": "公告管理",
+                "verbose_name_plural": "公告管理",
+                "ordering": ["-created_time"],
             },
         ),
     ]

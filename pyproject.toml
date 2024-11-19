@@ -6,6 +6,9 @@ authors = ["VincentAdamNemessis <vincentadamnemessis@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.0.1"
+
 [virtualenvs]
 create=true
 in-project=true
@@ -112,7 +115,8 @@ select = [
     "W605", # invalid-escape-sequence
 ]
 ignore = [
-    "B904" # raise-without-from-inside-except
+    "B904", # raise-without-from-inside-except
+    "N999" # ignore name style rule
 ]
 
 fixable = ["ALL"]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('frontenduser', '0010_alter_frontenduser_django_user'),
+        ("frontenduser", "0010_alter_frontenduser_django_user"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='frontenduser',
-            name='description',
+            model_name="frontenduser",
+            name="description",
             field=models.TextField(blank=True, null=True),
         ),
     ]
