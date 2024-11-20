@@ -86,12 +86,12 @@ WSGI_APPLICATION = "ApplicationDistributionCenter.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "PORT": env("MYSQL_PORT"),
-        "HOST": env("MYSQL_HOST"),
-        "USER": env("MYSQL_USER"),
-        "PASSWORD": env("MYSQL_PASSWORD"),
-        "NAME": env("MYSQL_DATABASE"),
+        "ENGINE": "django.db.backends.postgresql",
+        "PORT": env("POSTGRES_PORT"),
+        "HOST": env("POSTGRES_HOST"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
+        "NAME": env("POSTGRES_DATABASE"),
     }
 }
 

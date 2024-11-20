@@ -14,7 +14,7 @@ def get_article_hot_degree(article, get_type=1):
             hot_degree += article.view_volume * 10 + article.thumbs_volume * 50
             hot_degree += article.comment_set.count() * 200
             hot_degree += article.correlation_software.download_volume * 30
-        if get_type == 2:
+        elif get_type == 2:
             today = datetime.now().date()
             start_time = time(0, 0, 0)  # 设置开始时间为 00:00:00
             end_time = time(23, 59, 59)  # 设置结束时间为 23:59:59
@@ -28,15 +28,9 @@ def get_article_hot_degree(article, get_type=1):
             hot_degree += (
                 article.comment_set.all().filter(created_time__range=(start_datetime, end_datetime)).count() * 200
             )
-    except ValueError:
-        pass
-    except TypeError:
-        pass
-    except AttributeError:
-        pass
-    except IndexError:
-        pass
-    return int(hot_degree)
+        return int(hot_degree)
+    except Exception:
+        return hot_degree
 
 
 def get_software_hot_degree(software, get_type=1):
@@ -62,13 +56,9 @@ def get_software_hot_degree(software, get_type=1):
             hot_volume += (
                 software.comment_set.all().filter(created_time__range=(start_datetime, end_datetime)).count() * 100
             )
-    except ValueError:
-        pass
-    except TypeError:
-        pass
-    except AttributeError:
-        pass
-    return int(hot_volume)
+        return int(hot_volume)
+    except Exception:
+        return 0
 
 
 def get_related_articles(articles, article_id):
