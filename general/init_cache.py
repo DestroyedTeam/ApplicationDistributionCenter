@@ -13,12 +13,12 @@ from software.models import SoftWare
 from .common_compute import get_article_hot_degree, get_software_hot_degree
 
 
-def get_notices():
-    notices = cache.get("notices")
-    if notices is None:
+def get_notices(software_id: int = None) -> list[Announcements]:
+    notices: list[Announcements] = cache.get("notices")
+    if not notices:
         notices = list(Announcements.objects.filter().order_by("-created_time"))
         cache.set("notices", notices, 60 * 60)
-    return cache.get("notices")
+    return cache.get("notices") if not software_id else [notice for notice in notices if notice.app.id == software_id]
 
 
 def get_comments():
@@ -238,7 +238,7 @@ def get_all_answer():
     return cache.get("all_answer")
 
 
-def get_all_category():
+def get_all_category() -> list[Category]:
     categories = cache.get("categories")
     if categories is None:
         categories = list(Category.objects.filter(state=2).order_by("id").prefetch_related("software_set"))

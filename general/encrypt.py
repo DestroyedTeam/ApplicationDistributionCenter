@@ -2,19 +2,27 @@ import base64
 
 from Crypto.Cipher import AES
 
+from general.common_exceptions import DecryptError, EncryptError
+
 
 def encrypt(instr, key=b"frontendencryptx", iv=b"frontendencryptx"):
-    temp_str = pad(instr)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    ret = base64.b64encode(cipher.encrypt(temp_str))
+    try:
+        temp_str = pad(instr)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        ret = base64.b64encode(cipher.encrypt(temp_str))
+    except Exception:
+        raise EncryptError()
     return ret
 
 
 def decrypt(instr, key=b"frontendencryptx", iv=b"frontendencryptx"):
-    instr = base64.b64decode(instr)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    ret = un_pad(cipher.decrypt(instr))
-    ret = ret.decode(encoding="utf-8")
+    try:
+        instr = base64.b64decode(instr)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        ret = un_pad(cipher.decrypt(instr))
+        ret = ret.decode(encoding="utf-8")
+    except Exception:
+        raise DecryptError()
     return ret
 
 
