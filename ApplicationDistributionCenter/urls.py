@@ -32,14 +32,15 @@ urlpatterns = (
         re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
         re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
         # 后台路由
-        path("center/all/control/", admin.site.urls),
+        path("center/all/control", admin.site.urls),
         # 前台路由
         path("", home_page),
         path("index/", home_page),
         path("analytics/", include("analytics.urls")),
         path("notices/", include("announcements.urls")),
         path("category/", include("category.urls")),
-        path("content/", include("articles.urls")),
+        path("articles/", include("articles.urls")),
+        path("comments/", include("comments.urls")),
         path("common/", include("components.urls")),
         path("visitor/", include("visitor.urls")),
         path("software/", include("software.urls")),
@@ -50,4 +51,4 @@ urlpatterns = (
         document_root=f"{settings.STATIC_ROOT if settings.STATIC_ROOT else settings.STATICFILES_DIRS[0]}/favicon.ico",
     )
 )
-# NOTE: 加号后边的代码都是选择执行路由
+# NOTE: 加号后边的代码都是选择执行路由(即生产环境中可能不会执行)

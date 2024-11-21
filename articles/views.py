@@ -1,201 +1,77 @@
 # Create your views here.
 import json
 
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.views.decorators.http import require_POST
+from rest_framework import status
+from rest_framework.decorators import APIView
 
-from articles.models import Article
 from general.common_compute import compute_similarity, get_related_articles
+from general.common_exceptions import SecurityError
 from general.data_handler import get_image_urls_from_md_str
-from general.encrypt import decrypt, encrypt
-from general.init_cache import get_all_articles as g_as
-from general.init_cache import get_all_software as g_a_s
-from general.init_cache import get_all_user, get_comments
+from general.encrypt import decrypt
+from general.init_cache import get_articles
+from general.serializers import CommonResponseSerializer
 from software.models import SoftWare
 
-not_in_init_comments_parent = set()
+from .models import Article
+from .serializers import ArticleSerializer
 
 
-@require_POST
-def get_comments_data(request):
-    comments = get_comments()
-    if request.method == "POST":
-        if comments:
-            try:
-                post_data = json.loads(request.body)
-                query_id = decrypt(post_data["query_id"].replace(" ", "+"))
-                query_type = post_data["type"]
-            except ValueError:
-                return JsonResponse({"code": 402, "msg": "failed with invalid params"})
-            except TypeError:
-                return JsonResponse({"code": 407, "msg": "failed with wrong params"})
-            except AttributeError:
-                return JsonResponse({"code": 401, "msg": "failed with bad request body"})
-            if query_type == "article":
-                comments = [
-                    comment
-                    for comment in comments
-                    if comment.correlation_article and comment.correlation_article.id == int(query_id)
-                ]
-            if query_type == "software":
-                comments = [
-                    comment
-                    for comment in comments
-                    if comment.correlation_software and comment.correlation_software.id == int(query_id)
-                ]
-            if post_data.get("load_more"):
-                comments = [t for t in comments if encrypt(str(t.id)).decode("utf8") not in not_in_init_comments_parent]
-                if len(comments) < 10:
-                    comments = None
-                else:
-                    comments = comments[10:]
-            else:
-                comments = comments[:10]
-            if len(comments) <= 0:
-                return JsonResponse({"code": 404, "msg": "failed with no data"})
-            comments = [
-                {
-                    "comment_id": encrypt(str(comment.id)).decode("utf-8"),
-                    "visitor": {
-                        "user_id": encrypt(str(comment.visitor.id)).decode("utf-8"),
-                        "username": comment.visitor.nickname if comment.visitor.nickname else comment.visitor.username,
-                        "head_icon": comment.visitor.head_icon.url,
-                        "role": comment.visitor.role,
-                    },
-                    "content": comment.content,
-                    "correlation_article": comment.correlation_article.title if comment.correlation_article else "",
-                    "correlation_software": comment.correlation_software.name if comment.correlation_software else "",
-                    "created_time": comment.created_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "parent_id": encrypt(str(comment.parent.id)).decode("utf-8")
-                    if comment.parent
-                    else encrypt(str(0)).decode("utf-8"),
-                }
-                for comment in comments
-            ]
-            comments_id_list = [j["comment_id"] for j in comments]
-            comments_id_list.append(encrypt(str(0)).decode("utf-8"))
-            for i in comments:
-                if i["parent_id"] not in comments_id_list:
-                    not_in_init_comments_parent.add(i["parent_id"])
-            for i in not_in_init_comments_parent:
-                if query_type == "article":
-                    t = [
-                        t
-                        for t in get_comments()
-                        if i == encrypt(str(t.id)).decode("utf8") and t.correlation_article.id == int(query_id)
-                    ][0]
-                if query_type == "software":
-                    t = [
-                        t
-                        for t in get_comments()
-                        if i == encrypt(str(t.id)).decode("utf8") and t.correlation_software.id == int(query_id)
-                    ][0]
-                t = {
-                    "comment_id": encrypt(str(t.id)).decode("utf-8"),
-                    "visitor": {
-                        "user_id": encrypt(str(t.user.id)).decode("utf-8"),
-                        "username": t.visitor.nickname if t.visitor.nickname else t.visitor.username,
-                        "head_icon": t.visitor.head_icon.url,
-                        "role": t.visitor.role,
-                    },
-                    "content": t.content,
-                    "correlation_article": t.correlation_article.title if t.correlation_article else "",
-                    "correlation_software": t.correlation_software.name if t.correlation_software else "",
-                    "created_time": t.created_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "parent_id": encrypt(str(t.parent.id)).decode("utf-8")
-                    if t.parent
-                    else encrypt(str(0)).decode("utf-8"),
-                }
-                comments.append(t)
-            return JsonResponse({"code": 200, "msg": "success", "data": {"comments": comments}})
-        else:
-            return JsonResponse(
-                {
-                    "code": 404,
-                    "msg": "failed with no data",
-                }
-            )
-    else:
-        return JsonResponse({"code": 301, "msg": "failed with wrong request action"})
+class ArticleAPIView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.serializer = CommonResponseSerializer
 
-
-@login_required
-@require_POST
-def publish_comment(request):
-    if request.method == "POST":
+    def get(self, request):
+        # id参数获取及校验
+        article_id = request.GET.get("article_id")
         try:
-            user = [mat_user for mat_user in get_all_user() if mat_user.username == request.user.username]
-            if len(user) == 1:
-                user = user[0]
-            else:
-                return JsonResponse({"code": 403, "msg": "请先登录"})
-            content = request.POST.get("comment")
-            correlation_article_id = int(decrypt(request.POST.get("article_id").encode("utf-8")))
-            correlation_software_id = int(decrypt(request.POST.get("software_id").encode("utf-8")))
-            parent_id = int(decrypt(request.POST.get("comment_parent").encode("utf-8")))
-        except ValueError:
-            return JsonResponse({"code": 402, "msg": "failed with invalid params"})
-        except TypeError:
-            return JsonResponse({"code": 401, "msg": "failed with wrong params"})
-        except AttributeError:
-            return JsonResponse({"code": 406, "msg": "failed with wrong request body"})
-        if correlation_article_id:
-            correlation_article = Article.objects.get(id=correlation_article_id)
-        else:
-            correlation_article = None
-        if correlation_software_id:
-            correlation_software = SoftWare.objects.get(id=correlation_software_id)
-        else:
-            correlation_software = None
-        if parent_id:
-            parent = user.comment_set.get(id=parent_id).filter(state=2)
-        else:
-            parent = None
-        comment = user.comment_set.create(
-            content=content,
-            correlation_article=correlation_article,
-            correlation_software=correlation_software,
-            parent=parent,
-        )
-        if comment:
-            return JsonResponse(
-                {"code": 200, "msg": "success", "data": {"comment_id": encrypt(str(comment.id)).decode("utf-8")}}
+            article_id = decrypt(article_id) if article_id else None
+        except SecurityError:
+            serializer = self.serializer(
+                data={"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with decrypt params"}
             )
-        else:
-            return JsonResponse({"code": 400, "msg": "failed when inserting data to database"})
-    else:
-        return JsonResponse({"code": 301, "msg": "failed with invalid request action"})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            return JsonResponse(serializer.errors, safe=False)
+        except Exception:
+            serializer = self.serializer(
+                data={"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with invalid params"}
+            )
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            return JsonResponse(serializer.errors, safe=False)
+        articles = get_articles() if not article_id else get_articles(article_id=article_id)
 
-
-@require_http_methods(["GET", "POST"])
-def get_articles(request):
-    articles = g_as()
-    if request.method == "GET":
+        # 页面参数获取及校验
         try:
-            if request.GET.get("page_num"):
-                page_num = int(request.GET.get("page_num"))
-            elif request.POST.get("page_num") is None:
-                page_num = 1
+            if (not article_id) and request.GET.get("page"):
+                page_num = int(request.GET.get("page"))
             else:
                 page_num = -1
-        except ValueError:
-            return JsonResponse({"code": 402, "msg": "failed with invalid params"})
+        except Exception:
+            serializer = self.serializer(
+                data={"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with invalid params"}
+            )
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            return JsonResponse(serializer.errors, safe=False)
         if page_num and page_num > 0:
-            page_num = page_num - 1
-        else:
-            return JsonResponse({"code": 401, "msg": "failed with wrong params"})
-        if articles:
-            articles = articles[int(page_num * 7) : int((page_num + 1) * 7)]
-            if len(articles) > 0:
+            page_num -= 1
+            articles = articles.filter()[page_num * 6 : page_num * 6 + 6]
+
+        if articles and len(articles) > 0:
+            article_serializer = ArticleSerializer(articles, many=True)
+            if article_serializer.data:
                 articles = [
                     {
                         "id": article.id,
                         "visitor": {
-                            "user_id": article.visitor.id,
-                            "username": article.visitor.username,
-                            "email": article.visitor.email,
+                            "user_id": article.user.id,
+                            "username": article.user.username,
+                            "email": article.user.django_user.email,
                         },
                         "title": article.title,
                         "content": article.content,
@@ -205,116 +81,106 @@ def get_articles(request):
                     }
                     for article in articles
                 ]
-                return JsonResponse({"code": 200, "msg": "success", "data": articles})
             else:
-                return JsonResponse({"code": 404, "msg": "failed with no data"})
+                serializer = self.serializer(
+                    data={"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with invalid data"}
+                )
+                if serializer.is_valid():
+                    return JsonResponse(serializer.data)
+                return JsonResponse(serializer.errors, safe=False)
+            serializer = self.serializer(data={"code": status.HTTP_200_OK, "msg": "success", "data": articles})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            return JsonResponse(serializer.errors, safe=False)
         else:
-            return JsonResponse({"code": 404, "msg": "failed with no data"})
-    elif request.method == "POST":
-        articles = articles[6:]
-        articles = [
-            {
-                "id": article.id,
-                "title": article.title,
-                "content": article.plain_content()[:200],
-                "cover": article.cover.url,
-                "correlation_software": article.correlation_software,
-                "created_time": article.created_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "updated_time": article.updated_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "visitor": {
-                    "id": article.visitor.id,
-                    "username": article.visitor.nickname if article.visitor.nickname else article.visitor.username,
-                    "email": article.visitor.email,
-                },
-            }
-            for article in articles
-        ]
-        if len(articles):
-            return JsonResponse({"code": 200, "msg": "success", "data": articles})
-        else:
-            return JsonResponse({"code": 404, "msg": "failed with no data"})
-    else:
-        return JsonResponse({"code": 301, "msg": "failed with wrong request action"})
+            serializer = self.serializer(data={"code": status.HTTP_204_NO_CONTENT, "msg": "获取成功但空数据"})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            return JsonResponse(serializer.errors, safe=False)
 
-
-def publish_page(request):
-    if request.method == "GET":
-        all_software = g_a_s()
+    def post(self, request):
         try:
-            publish_type = request.GET.get("type")
-            if int(publish_type) == 1:
-                return render(request, "front/publish_article.html", {"all_software": all_software})
-            elif int(publish_type) == 2:
-                return render(request, "front/publish_software.html", {})
+            title = request.POST.get("title")
+            content = request.POST.get("content")
+            cover = get_image_urls_from_md_str(content)
+            if cover is None or len(cover) <= 0:
+                cover = None
             else:
-                return render(request, "500.html", {"error": "请求参数错误"})
-        except ValueError:
-            return render(request, "500.html", {"error": "请求参数错误"})
-        except TypeError:
-            return render(request, "500.html", {"error": "请求参数错误"})
+                cover = [c for c in cover if c.split(".")[-1] in ["jpg", "jpeg", "png", "gif"]]
+                if len(cover) > 0:
+                    cover = cover[0].replace("/media/", "")
+                else:
+                    cover = None
+            correlation_software_id = request.POST.get("correlation_software_id")
+            if correlation_software_id:
+                correlation_software = SoftWare.objects.get(id=correlation_software_id)
+            else:
+                correlation_software = None
+            if cover:
+                article = Article.objects.create(
+                    user=None, title=title, content=content, cover=cover, correlation_software=correlation_software
+                )
+            else:
+                article = Article.objects.create(
+                    user=None, title=title, content=content, correlation_software=correlation_software
+                )
+            if article:
+                return JsonResponse({"code": 200, "msg": "success", "data": {"article_id": article.id}})
+            else:
+                return JsonResponse({"code": 400, "msg": "failed when inserting data to database"})
+        except Exception:
+            pass
+
+    def put(self, request):
+        pass
+
+    def delete(self, request):
+        pass
 
 
-@require_GET
-def articles_page(request):
-    if request.method == "GET":
-        articles = g_as()
-        articles_count = len(articles)
-        return render(request, "articles_list.html", {"articles": articles[:6], "articles_count": articles_count})
-    return render(request, "500.html", {"code": 405, "error": "requested with wrong method"})
+class ArticlePageView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.serializer = ArticleSerializer
 
-
-@require_GET
-def article_page(request):
-    if request.method == "GET":
-        articles = g_as()
+    def get(self, request):
+        article_id = request.GET.get("article_id")
         try:
-            article_id = request.GET.get("article_id")
-            if article_id is None:
-                raise ValueError
-            else:
-                article_id = article_id.replace(" ", "+")
-                article_id = int(decrypt(article_id))
-        except ValueError:
-            return render(request, "article_details.html", {"error": "Invalid params", "code": 402})
-        except TypeError:
-            return render(request, "article_details.html", {"error": "Invalid params", "code": 401})
-        matched_articles = [article for article in articles if article.id == article_id]
-        if len(matched_articles) > 0:
-            article = matched_articles[0]
-        else:
-            article = None
-        if article:
-            related_articles = [article for article in articles if article.id != article_id]
-            related_articles = sorted(
-                related_articles,
-                key=lambda x: compute_similarity(article.plain_content(), x.plain_content()),
-                reverse=True,
-            )[:6]
-            related_software = [
-                article.correlation_software
-                for article in articles
-                if article.id == article_id and article.correlation_software
-            ]
-            related_articles_count = len(related_articles)
-            related_software_count = len(related_software)
-            context_articles = get_related_articles(articles, article_id)
-        else:
-            return render(request, "article_details.html", {"error": "Not found article", "code": 404})
+            article_id = decrypt(article_id.replace(" ", "+")) if article_id else None
+        except SecurityError:
+            return render(request, "article_details.html", {"error": "解析ID失败", "code": status.HTTP_400_BAD_REQUEST})
+        except Exception:
+            return render(request, "article_details.html", {"error": "无效参数", "code": status.HTTP_400_BAD_REQUEST})
+        articles = get_articles().filter()[:6] if not article_id else get_articles(article_id=article_id).filter()
+        serializer = self.serializer(articles, many=True)
+        if serializer.data:
+            if article_id:
+                related_articles = [article for article in articles if article.id != article_id]
+                related_articles = sorted(
+                    related_articles,
+                    key=lambda x: compute_similarity(articles[0].plain_content(), x.plain_content()),
+                    reverse=True,
+                )[:6]
+                related_software = [
+                    article.correlation_software
+                    for article in articles
+                    if article.id == article_id and article.correlation_software
+                ]
+                context_articles = get_related_articles(articles, article_id)
+                artile_detail = {
+                    "article": articles[0],
+                    "context_articles": context_articles,
+                    "related_articles": related_articles,
+                    "related_software": related_software,
+                    "respond_comment": "article",
+                }
+                return render(request, "article_details.html", artile_detail)
+
+            articles_count = get_articles().count()
+            return render(request, "articles_list.html", {"articles": articles, "articles_count": articles_count})
         return render(
-            request,
-            "article_details.html",
-            {
-                "article": article,
-                "context_articles": context_articles,
-                "related_articles": related_articles,
-                "related_articles_count": related_articles_count,
-                "related_software": related_software,
-                "related_software_count": related_software_count,
-                "respond_comment": "article",
-            },
+            request, "articles_list.html", {"error": "序列化失败或未找到文章", "code": status.HTTP_400_BAD_REQUEST}
         )
-    else:
-        return render(request, "article_details.html", {"error": "Not allowed request action", "code": 405})
 
 
 @require_POST
@@ -351,53 +217,6 @@ def thumb_article(request):
             return JsonResponse({"code": 406, "error": "Error with bad request headers"})
     else:
         return JsonResponse({"code": 405, "error": "Error with bad request action"})
-
-
-@require_POST
-def publish_article(request):
-    if request.method == "POST":
-        try:
-            user = [mat_user for mat_user in get_all_user() if mat_user.username == request.user.username]
-            if len(user) == 1:
-                user = user[0]
-            else:
-                return JsonResponse({"code": 404, "msg": "请先登录"})
-            title = request.POST.get("title")
-            content = request.POST.get("content")
-            cover = get_image_urls_from_md_str(content)
-            if cover is None or len(cover) <= 0:
-                cover = None
-            else:
-                cover = [c for c in cover if c.split(".")[-1] in ["jpg", "jpeg", "png", "gif"]]
-                if len(cover) > 0:
-                    cover = cover[0].replace("/media/", "")
-                else:
-                    cover = None
-            correlation_software_id = request.POST.get("correlation_software_id")
-            if correlation_software_id:
-                correlation_software = SoftWare.objects.get(id=correlation_software_id)
-            else:
-                correlation_software = None
-        except ValueError:
-            return JsonResponse({"code": 402, "msg": "failed with invalid params"})
-        except TypeError:
-            return JsonResponse({"code": 401, "msg": "failed with wrong params"})
-        except AttributeError:
-            return JsonResponse({"code": 400, "msg": "failed with bad request body"})
-        if cover:
-            article = Article.objects.create(
-                user=user, title=title, content=content, cover=cover, correlation_software=correlation_software
-            )
-        else:
-            article = Article.objects.create(
-                user=user, title=title, content=content, correlation_software=correlation_software
-            )
-        if article:
-            return JsonResponse({"code": 200, "msg": "success", "data": {"article_id": article.id}})
-        else:
-            return JsonResponse({"code": 400, "msg": "failed when inserting data to database"})
-    else:
-        return JsonResponse({"code": 301, "msg": "failed with wrong request action"})
 
 
 @require_POST

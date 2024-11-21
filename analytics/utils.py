@@ -1,15 +1,17 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pyecharts import options as opts
 from pyecharts.charts import Bar
 
 from general.common_compute import get_article_hot_degree, get_software_hot_degree
-from general.init_cache import get_all_articles, get_all_software, get_all_user, get_comments
+from general.init_cache import get_all_software, get_all_user, get_articles, get_comments
 
 
 def get_indicator():
-    all_user, all_articles, all_software = get_all_user(), get_all_articles(), get_all_software()
-    recent_appended_user = [user for user in all_user if user.created_time >= datetime.now() - timedelta(days=7)]
+    all_user, all_articles, all_software = get_all_user(), get_articles(), get_all_software()
+    recent_appended_user = [
+        user for user in all_user if user.django_user.date_joined >= datetime.now(tz=timezone.utc) - timedelta(days=7)
+    ]
     recent_appended_software = [
         software for software in all_software if software.created_time >= datetime.now() - timedelta(days=7)
     ]
@@ -58,7 +60,7 @@ def get_rank_data():
         filtered_items = [item for item in items if getattr(item, date_field).date() == date_value]
         return get_top_items(filtered_items, key_func, top_n)
 
-    all_articles, all_software = get_all_articles(), get_all_software()
+    all_articles, all_software = get_articles(), get_all_software()
     today_date = datetime.now().date()
 
     update_popularity = lambda items, popularity_func, factor=1: [

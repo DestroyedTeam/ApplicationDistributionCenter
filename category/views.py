@@ -6,9 +6,10 @@ from rest_framework.views import APIView
 from general.common_exceptions import SecurityError
 from general.encrypt import decrypt
 from general.init_cache import get_all_category
+from general.serializers import CommonResponseSerializer
 
 from .models import Category
-from .serializers import CategorySerializer, CategoryTagsSerializer, CommonResponseSerializer
+from .serializers import CategorySerializer, CategoryTagsSerializer
 
 
 class CategoryView(APIView):

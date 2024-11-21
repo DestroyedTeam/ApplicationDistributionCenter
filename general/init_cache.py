@@ -107,10 +107,17 @@ def get_all_favorite_articles():
     return cache.get("favorite_articles")
 
 
-def get_all_articles():
+def get_articles(article_id: int = None) -> QuerySet[Article]:
+    if article_id:
+        return (
+            Article.objects.all()
+            .filter(id=article_id)
+            .prefetch_related("user")
+            .prefetch_related("correlation_software")
+        )
     all_articles = cache.get("all_articles")
     if all_articles is None:
-        all_articles = list(Article.objects.filter(state=2).select_related("user").order_by("-updated_time"))
+        all_articles = Article.objects.filter(state=2).select_related("user").order_by("-updated_time")
         cache.set("all_articles", all_articles, 45)
     return cache.get("all_articles")
 
@@ -174,12 +181,10 @@ def get_specific_user_software_by_username(username=None):
     return cache.get("specific_user_software")
 
 
-def get_all_user():
+def get_all_user() -> QuerySet[Visitor]:
     all_user = cache.get("all_user")
     if all_user is None:
-        all_user = list(
-            Visitor.objects.filter(state=2).select_related("django_user").order_by("-django_user__date_joined")
-        )
+        all_user = Visitor.objects.filter(state=2).select_related("django_user").order_by("-django_user__date_joined")
         cache.set("all_user", all_user, 20)
     return cache.get("all_user")
 
@@ -266,7 +271,7 @@ def get_hot_articles_and_software():
     return cache.get("hot_articles"), cache.get("hot_software")
 
 
-def get_category_tags(category_id):
+def get_category_tags(category_id) -> list[str]:
     # 尝试从缓存中获取tags列表
     tags_cache_key = f"category_{category_id}_tags"
     unique_tags = cache.get(tags_cache_key)

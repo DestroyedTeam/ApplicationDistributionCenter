@@ -787,7 +787,7 @@
 				{% if go_to %}
 					window.location.href = '{{ go_to }}';
 				{% else %}
-					window.history.back();
+					{#window.history.back();#}
 				{% endif %}
 			})
 		})

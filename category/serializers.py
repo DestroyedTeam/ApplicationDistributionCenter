@@ -29,9 +29,3 @@ class CategorySerializer(serializers.ModelSerializer):
     @staticmethod
     def get_software_set_count(obj):
         return obj.software_set.filter(state=2).count()
-
-
-class CommonResponseSerializer(serializers.Serializer):
-    code = serializers.IntegerField()
-    msg = serializers.CharField(allow_null=True, allow_blank=True)
-    data = serializers.ListField(allow_null=True, allow_empty=True)

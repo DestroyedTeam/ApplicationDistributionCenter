@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_POST
 
 from general.data_handler import storage_uploaded_image, unload_image_from_server
-from general.init_cache import get_all_articles, get_all_software, get_all_user
+from general.init_cache import get_all_software, get_all_user, get_articles
 
 # Create your views here.
 
@@ -63,7 +63,7 @@ def search_result_page(request):
                 matched_software = [
                     x for x in get_all_software() if (search_str in x.name or search_str in x.description)
                 ]
-            matched_articles = [x for x in get_all_articles() if search_str in x.title or search_str in x.content]
+            matched_articles = [x for x in get_articles() if search_str in x.title or search_str in x.content]
             matched_user = [x for x in get_all_user() if search_str in x.username or search_str in x.nickname]
             matched_software_count = len(matched_software)
             matched_articles_count = len(matched_articles)
@@ -91,7 +91,7 @@ def search_result_page(request):
 def home_page(request):
     if request.method == "GET":
         all_software = get_all_software()
-        all_articles = get_all_articles()
+        all_articles = get_articles()
         latest_articles = sorted(all_articles, key=lambda x: x.created_time, reverse=True)[:10]
         latest_articles_count = len(latest_articles)
         for cat in request.categories:
@@ -105,3 +105,20 @@ def home_page(request):
                 "latest_articles_count": latest_articles_count,
             },
         )
+
+
+def publish_page(request):
+    if request.method == "GET":
+        all_software = get_all_software()
+        try:
+            publish_type = request.GET.get("type")
+            if int(publish_type) == 1:
+                return render(request, "front/publish_article.html", {"all_software": all_software})
+            elif int(publish_type) == 2:
+                return render(request, "front/publish_software.html", {})
+            else:
+                return render(request, "500.html", {"error": "请求参数错误"})
+        except ValueError:
+            return render(request, "500.html", {"error": "请求参数错误"})
+        except TypeError:
+            return render(request, "500.html", {"error": "请求参数错误"})
