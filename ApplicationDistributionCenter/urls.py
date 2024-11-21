@@ -39,9 +39,9 @@ urlpatterns = (
         path("analytics/", include("analytics.urls")),
         path("notices/", include("announcements.urls")),
         path("category/", include("category.urls")),
-        path("content/", include("commentswitharticles.urls")),
+        path("content/", include("articles.urls")),
         path("common/", include("components.urls")),
-        path("user/", include("frontenduser.urls")),
+        path("visitor/", include("visitor.urls")),
         path("software/", include("software.urls")),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -139,7 +139,7 @@
                         <li class="answer even thread-even depth-1">
                             <div class="answer_body d-flex flex-fill">
                                 <div class="profile mr-2 mr-md-3">
-                                    <img src="{{ ans.respondent.head_icon.url|default:'/media/user/head_icon/default_head_icon.ico' }}"
+                                    <img src="{{ ans.respondent.head_icon.url|default:'/media/visitor/head_icon/default_head_icon.ico' }}"
                                          width="96"
                                          height="96" alt="头像"
                                          class="avatar avatar-96wp-user-avatar wp-user-avatar-96 alignnone photo avatar-default">
@@ -210,7 +210,7 @@
                             <div id="comment-author-info" class="row  row-sm">
                                 <div class="visitor-avatar d-flex mb-2">
                                     <img class="v-avatar rounded-circle"
-                                         src="{{ request.session.logon_user.head_icon.url|default:'/media/user/head_icon/default_head_icon.ico' }}"
+                                         src="{{ request.session.logon_user.head_icon.url|default:'/media/visitor/head_icon/default_head_icon.ico' }}"
                                          alt="头像">
                                 </div>
                                 <div class="col-12 col-md-6 mb-3">
@@ -268,7 +268,7 @@
 		function validate_answer() {
 			let answer = document.getElementById('content').value;
 			let warning_msg = [];
-			if ($('#user-link').text().trim() === '匿名用户' || $('#user-link').text() === undefined) {
+			if ($('#visitor-link').text().trim() === '匿名用户' || $('#visitor-link').text() === undefined) {
 				Swal.fire({
 					icon: 'error',
 					title: '请先登录！',

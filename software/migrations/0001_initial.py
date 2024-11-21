@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("category", "0001_initial"),
-        ("frontenduser", "0001_initial"),
+        ("visitor", "0001_initial"),
     ]
 
     operations = [
@@ -37,8 +37,8 @@ class Migration(migrations.Migration):
                     models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to="category.category"),
                 ),
                 (
-                    "user",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="frontenduser.FrontEndUser"),
+                    "visitor",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="visitor.visitor"),
                 ),
             ],
             options={

@@ -126,9 +126,9 @@ function get_notice_to_specific_app(csrftoken, software_id) {
 async function get_comments_for_software_or_articles(csrftoken, type, query_id, init = 1) {
 	let url = ''; //初始化url
 	if (init === 1) { //根据init参数决定请求的url
-		url = '/commentswitharticles/api/get/init/comments/';
+		url = '/articles/api/get/init/comments/';
 	} else if (init === 0) {
-		url = '/commentswitharticles/api/load/more/comments/';
+		url = '/articles/api/load/more/comments/';
 	}
 	if (csrftoken === '' || csrftoken === null || csrftoken === undefined) {
 		console.error('csrftoken missed')

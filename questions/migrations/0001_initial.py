@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("frontenduser", "0001_initial"),
+        ("visitor", "0001_initial"),
     ]
 
     operations = [
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ("updated_time", models.DateTimeField(auto_now=True)),
                 (
                     "publisher",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="frontenduser.frontenduser"),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="visitor.visitor"),
                 ),
             ],
             options={

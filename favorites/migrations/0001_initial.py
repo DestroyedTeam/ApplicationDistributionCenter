@@ -8,8 +8,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("commentswitharticles", "0007_auto_20240302_2200"),
-        ("frontenduser", "0016_recentbrowsing"),
+        ("articles", "0008_delete_comment"),
+        ("visitor", "0016_recentbrowsing"),
         ("software", "0005_alter_software_state"),
     ]
 
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="commentswitharticles.article",
+                        to="articles.article",
                     ),
                 ),
                 (
@@ -36,16 +36,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "user",
-                    models.ForeignKey(
-                        null=True, on_delete=django.db.models.deletion.CASCADE, to="frontenduser.frontenduser"
-                    ),
+                    "visitor",
+                    models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to="visitor.visitor"),
                 ),
             ],
             options={
                 "verbose_name": "收藏管理",
                 "verbose_name_plural": "收藏管理",
-                "unique_together": {("user", "correlation_article"), ("user", "correlation_software")},
+                "unique_together": {("visitor", "correlation_article"), ("visitor", "correlation_software")},
             },
         ),
     ]

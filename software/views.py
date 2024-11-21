@@ -84,7 +84,7 @@ def publish_software(request):
             return render(
                 request,
                 "front/publish_software.html",
-                {"msg": "发布成功", "go_to": "/commentswitharticles/publish/?type=2"},
+                {"msg": "发布成功", "go_to": "/articles/publish/?type=2"},
             )
         else:
             return render(request, "500.html", {"code": 402, "error": "数据库异常或未知错误"})
@@ -141,7 +141,7 @@ def get_software_detail(request):
                         "link_123": software.link_123,
                         "icon": software.icon.url,
                         "state": software.state,
-                        "user": {
+                        "visitor": {
                             "id": software.user.id,
                             "username": software.user.username,
                             "email": software.user.email,
@@ -222,10 +222,10 @@ def get_software(request):
                             "link_123": software.link_123,
                             "icon": software.icon.url,
                             "state": software.state,
-                            "user": {
-                                "id": software.user.id,
-                                "username": software.user.username,
-                                "email": software.user.email,
+                            "visitor": {
+                                "id": software.visitor.id,
+                                "username": software.visitor.username,
+                                "email": software.visitor.email,
                             },
                             "view_volume": software.view_volume,
                             "thumbs_volume": software.thumbs_volume,

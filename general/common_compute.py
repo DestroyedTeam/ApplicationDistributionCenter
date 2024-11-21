@@ -85,39 +85,39 @@ def compute_similarity(str1, str2):
 
 
 def update_user_recent(user, article_id, software_id):
-    from commentswitharticles.models import Article
-    from frontenduser.models import FrontEndUser
+    from articles.models import Article
     from software.models import SoftWare
+    from visitor.models import Visitor
 
     article_id = int(decrypt(article_id.replace(" ", "+"))) if article_id else None
     software_id = int(decrypt(software_id.replace(" ", "+"))) if software_id else None
     try:
         if user and article_id:
             if (
-                FrontEndUser.RecentBrowsing.objects.all()
+                Visitor.RecentBrowsing.objects.all()
                 .values("article")
                 .filter(user=user, article=Article.objects.get(id=article_id))
                 .count()
                 > 0
             ):
                 return True
-            FrontEndUser.RecentBrowsing.objects.create(user=user, article=Article.objects.get(id=article_id))
+            Visitor.RecentBrowsing.objects.create(user=user, article=Article.objects.get(id=article_id))
             return True
         if user and software_id:
             if (
-                FrontEndUser.RecentBrowsing.objects.all()
+                Visitor.RecentBrowsing.objects.all()
                 .values("software")
                 .filter(user=user, software=SoftWare.objects.get(id=software_id))
                 .count()
                 > 0
             ):
                 return True
-            FrontEndUser.RecentBrowsing.objects.create(user=user, software=SoftWare.objects.get(id=software_id))
+            Visitor.RecentBrowsing.objects.create(user=user, software=SoftWare.objects.get(id=software_id))
             return True
     except Article.DoesNotExist:
         return False, "Article does not exist or valid"
     except SoftWare.DoesNotExist:
         return False, "Software does not exist or valid"
-    except FrontEndUser.DoesNotExist:
+    except Visitor.DoesNotExist:
         return False, "User does not exist or valid"
     return False, "Unknown error"

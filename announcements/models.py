@@ -21,7 +21,7 @@ class Announcements(models.Model):
     def save(self, *args, **kwargs) -> None:
         # 如果没有指定 author，就使用当前登录的后台用户
         if not self.author:
-            self.author = kwargs.pop("request").user
+            self.author = kwargs.pop("request").visitor
         super().save(*args, **kwargs)
 
     def short_title(self) -> str:

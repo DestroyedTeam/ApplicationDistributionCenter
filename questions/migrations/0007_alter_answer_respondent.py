@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("frontenduser", "0016_recentbrowsing"),
+        ("visitor", "0016_recentbrowsing"),
         ("questions", "0006_rename_init_questions_questions_question"),
     ]
 
@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="answer",
             name="respondent",
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="frontenduser.frontenduser"),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="visitor.visitor"),
         ),
     ]

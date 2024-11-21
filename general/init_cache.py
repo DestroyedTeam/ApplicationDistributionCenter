@@ -4,12 +4,13 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from announcements.models import Announcements
+from articles.models import Article
 from category.models import Category
-from commentswitharticles.models import Article, Comment
+from comments.models import Comment
 from favorites.models import Favorites
-from frontenduser.models import FrontEndUser
 from questions.models import Questions
 from software.models import SoftWare
+from visitor.models import Visitor
 
 from .common_compute import get_article_hot_degree, get_software_hot_degree
 
@@ -60,7 +61,7 @@ def get_specific_user_articles_by_username(username=None):
                 .order_by("-updated_time")
             )
             cache.set("specific_user_articles", specific_user_articles, 30)
-    elif username and len(specific_user_articles) > 0 and specific_user_articles[0].user.username != username:
+    elif username and len(specific_user_articles) > 0 and specific_user_articles[0].visitor.username != username:
         specific_user_articles = list(
             Article.objects.filter(user__username=username, state=2)
             .select_related("user", "correlation_software")
@@ -78,15 +79,15 @@ def get_specific_user_favorite_articles_by_username(username=None):
         else:
             specific_user_articles = list(
                 Favorites.objects.filter(user__username=username, correlation_type=1)
-                .select_related("user", "correlation_article")
+                .select_related("visitor", "correlation_article")
                 .filter(correlation_article__state=2)
                 .order_by("-created_time")
             )
             cache.set("specific_user_favorite_articles", specific_user_articles, 15)
-    elif username and len(specific_user_articles) > 0 and specific_user_articles[0].user.username != username:
+    elif username and len(specific_user_articles) > 0 and specific_user_articles[0].visitor.username != username:
         specific_user_articles = list(
             Favorites.objects.filter(user__username=username, correlation_type=1)
-            .select_related("user", "correlation_article")
+            .select_related("visitor", "correlation_article")
             .filter(correlation_article__state=2)
             .order_by("-created_time")
         )
@@ -99,7 +100,7 @@ def get_all_favorite_articles():
     if favorite_articles is None:
         favorite_articles = list(
             Favorites.objects.filter(correlation_type=1, correlation_article__state=2)
-            .select_related("user", "correlation_article")
+            .select_related("visitor", "correlation_article")
             .order_by("-created_time")
         )
         cache.set("favorite_articles", favorite_articles, 45)
@@ -162,7 +163,7 @@ def get_specific_user_software_by_username(username=None):
                 .order_by("-updated_time")
             )
             cache.set("specific_user_software", specific_user_software, 15)
-    elif username and len(specific_user_software) > 0 and specific_user_software[0].user.username != username:
+    elif username and len(specific_user_software) > 0 and specific_user_software[0].visitor.username != username:
         specific_user_software = list(
             SoftWare.objects.filter(user__username=username, state=2)
             .select_related("user", "category")
@@ -177,7 +178,7 @@ def get_all_user():
     all_user = cache.get("all_user")
     if all_user is None:
         all_user = list(
-            FrontEndUser.objects.filter(state=2).select_related("django_user").order_by("-django_user__date_joined")
+            Visitor.objects.filter(state=2).select_related("django_user").order_by("-django_user__date_joined")
         )
         cache.set("all_user", all_user, 20)
     return cache.get("all_user")
@@ -195,15 +196,15 @@ def get_specific_user_favorite_software_by_username(username=None):
         else:
             specific_user_software = list(
                 Favorites.objects.filter(user__username=username, state=2)
-                .select_related("user", "category", "correlation_software")
+                .select_related("visitor", "category", "correlation_software")
                 .prefetch_related("article_set")
                 .order_by("-updated_time")
             )
             cache.set("specific_user_favorite_software", specific_user_software, 15)
-    elif username and len(specific_user_software) > 0 and specific_user_software[0].user.username != username:
+    elif username and len(specific_user_software) > 0 and specific_user_software[0].visitor.username != username:
         specific_user_software = list(
             Favorites.objects.filter(user__username=username, state=2)
-            .select_related("user", "category", "correlation_software")
+            .select_related("visitor", "category", "correlation_software")
             .prefetch_related("article_set")
             .order_by("-updated_time")
         )
@@ -216,7 +217,7 @@ def get_all_favorite_software():
     if all_favorite_software is None:
         all_favorite_software = list(
             Favorites.objects.filter(correlation_type=2, correlation_software__state=2)
-            .select_related("user", "correlation_software")
+            .select_related("visitor", "correlation_software")
             .order_by("-created_time")
         )
         cache.set("favorite_software", all_favorite_software, 45)
@@ -278,10 +279,10 @@ def get_category_tags(category_id):
         return unique_tags
 
 
-@receiver(post_save, sender=FrontEndUser)
-@receiver(post_delete, sender=FrontEndUser)
+@receiver(post_save, sender=Visitor)
+@receiver(post_delete, sender=Visitor)
 def refresh_cache_on_user_save(sender, instance, **kwargs):
-    # 在FrontEndUser保存后刷新相关缓存
+    # 在Visitor保存后刷新相关缓存
     cache.delete("specific_user_articles")
     cache.delete("all_user")
     cache.delete("specific_user_software")
