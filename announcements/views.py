@@ -7,7 +7,7 @@ from general.encrypt import decrypt, encrypt
 from general.init_cache import get_notices
 
 
-class Notices(APIView):
+class NoticesView(APIView):
     def __init__(self):
         super().__init__()
         self.serializer = NoticesSerializer

@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.db.models import QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -238,10 +239,10 @@ def get_all_answer():
     return cache.get("all_answer")
 
 
-def get_all_category() -> list[Category]:
+def get_all_category() -> QuerySet[Category]:
     categories = cache.get("categories")
     if categories is None:
-        categories = list(Category.objects.filter(state=2).order_by("id").prefetch_related("software_set"))
+        categories = Category.objects.filter(state=2).order_by("id").prefetch_related("software_set")
         cache.set("categories", categories, 60 * 10)
     return cache.get("categories")
 

@@ -7,10 +7,11 @@ from general.common_exceptions import SecurityError
 from general.encrypt import decrypt
 from general.init_cache import get_all_category
 
+from .models import Category
 from .serializers import CategorySerializer, CategoryTagsSerializer, CommonResponseSerializer
 
 
-class Category(APIView):
+class CategoryView(APIView):
     def __init__(self):
         super().__init__()
         self.serializer = CommonResponseSerializer
@@ -42,32 +43,20 @@ class Category(APIView):
                 if serializer.is_valid():
                     return JsonResponse(serializer.data)
                 return JsonResponse(serializer.errors)
-            categories = [cate for cate in categories if cate.id == category_id]
+            categories = categories.filter(id=category_id)
+
+        # 格式化categories_data,将software_set和software_set_count添加到categories_data中
         if len(categories) > 0:
-            category_serializer = CategorySerializer(data=[category.__dict__ for category in categories], many=True)
-            if not category_serializer.is_valid():
-                serializer = self.serializer(
-                    data={"code": 500, "msg": "序列化失败", "data": category_serializer.errors}
-                )
-                if serializer.is_valid():
-                    return JsonResponse(serializer.data)
-                return JsonResponse(serializer.errors)
+            category_serializer = CategorySerializer(categories, many=True)
             serializer = self.serializer(
                 data={
                     "code": 200,
                     "msg": "获取成功",
-                    "data": [
-                        {
-                            "category": category,
-                            "software_set": category.software_set.all().filter(state=2)[:9],
-                            "software_set_count": category.software_set.all().filter(state=2).count(),
-                        }
-                        for category in categories
-                    ],
+                    "data": category_serializer.data,
                 }
             )
             if serializer.is_valid():
-                return JsonResponse(serializer.data)
+                return JsonResponse({"categories": serializer.data})
             return JsonResponse(serializer.errors)
         else:
             serializer = self.serializer(data={"code": 404, "msg": "分类（列表）未找到", "data": None})
@@ -76,7 +65,7 @@ class Category(APIView):
             return JsonResponse(serializer.errors)
 
 
-class CategoryTags(APIView):
+class CategoryTagsView(APIView):
     def __init__(self):
         super().__init__()
         self.serializer = CommonResponseSerializer
@@ -97,14 +86,15 @@ class CategoryTags(APIView):
                     return JsonResponse(serializer.data)
                 else:
                     return JsonResponse(serializer.errors)
-            category_tags_serializer = CategoryTagsSerializer(
-                data=CategoryTagsSerializer.get_tags(category_id=category_id)
-            )
-            if category_tags_serializer.is_valid():
-                category_tags = category_tags_serializer.data
-                return self.serializer(data={"code": 200, "msg": "获取成功", "data": category_tags}).data
+            category = Category.objects.get(id=category_id)
+            category.tags = category.slug
+            # TODO: 当前版本,标签已从分类中分离,此处应该返回分类的标签
+            category_tags_serializer = CategoryTagsSerializer(category)
+            serializer = self.serializer(data={"code": 200, "msg": "获取成功", "data": [category_tags_serializer.data]})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
             else:
-                return JsonResponse(category_tags_serializer.errors)
+                return JsonResponse(serializer.errors)
         except SecurityError as e:
             serializer = self.serializer(data={"code": 400, "msg": str(e), "data": None})
             if serializer.is_valid():

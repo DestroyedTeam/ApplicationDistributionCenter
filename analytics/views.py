@@ -20,7 +20,7 @@ class BackstageOverview(APIView):
         return render(request, "index.html", serializer.data)
 
 
-class Rank(APIView):
+class RankView(APIView):
     @staticmethod
     @cache_page(60 * 15)
     def get(request):

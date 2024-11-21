@@ -1,5 +1,5 @@
 from django.urls import path
 
-from .views import Notices
+from .views import NoticesView
 
-urlpatterns = [path("api", Notices.as_view())]
+urlpatterns = [path("api", NoticesView.as_view())]

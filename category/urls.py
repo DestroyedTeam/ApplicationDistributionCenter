@@ -1,8 +1,8 @@
 from django.urls import path
 
-from .views import Category, CategoryTags
+from .views import CategoryTagsView, CategoryView
 
 urlpatterns = [
-    path("api", Category.as_view()),
-    path("api/tags", CategoryTags.as_view()),
+    path("api", CategoryView.as_view()),
+    path("api/tags", CategoryTagsView.as_view()),
 ]
