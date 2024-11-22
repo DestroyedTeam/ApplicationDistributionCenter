@@ -16,7 +16,7 @@ class NoticesView(APIView):
         software_id = request.GET.get("software_id")
         if software_id:
             try:
-                software_id = decrypt(software_id.replace(" ", "+"))
+                software_id = decrypt(software_id)
                 software_id = int(software_id)
             except Exception:
                 serializer = self.serializer(data={"code": 400, "msg": "参数错误"})

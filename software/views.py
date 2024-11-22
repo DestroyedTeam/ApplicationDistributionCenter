@@ -265,7 +265,7 @@ def software_detail_page(request):
     if request.method == "GET":
         software_id = request.GET.get("software_id")
         try:
-            software_id = str(software_id.replace(" ", "+"))
+            software_id = str(software_id)
             software_id = decrypt(software_id.encode())
             software = get_software_by_software_id(software_id)[0]
             software.screenshots_set = software.softwarescreenshots_set.all()
@@ -306,7 +306,7 @@ def update_software_metrics(request):
     if request.method == "POST":
         try:
             software_id = request.POST.get("software_id")
-            software_id = str(software_id.replace(" ", "+"))
+            software_id = str(software_id)
             software_id = decrypt(software_id)
             software = SoftWare.objects.get(id=software_id)
             if software:

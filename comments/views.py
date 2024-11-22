@@ -20,7 +20,7 @@ def get_comments_data(request):
         if comments:
             try:
                 post_data = json.loads(request.body)
-                query_id = decrypt(post_data["query_id"].replace(" ", "+"))
+                query_id = decrypt(post_data["query_id"])
                 query_type = post_data["type"]
             except ValueError:
                 return JsonResponse({"code": 402, "msg": "failed with invalid params"})

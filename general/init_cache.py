@@ -108,16 +108,24 @@ def get_all_favorite_articles():
 
 
 def get_articles(article_id: int = None) -> QuerySet[Article]:
+    all_articles: QuerySet[Article] = cache.get("all_articles")
     if article_id:
+        filtered_single_article = all_articles.filter(id=article_id) if all_articles else None
+        if filtered_single_article and len(filtered_single_article) > 0:
+            return filtered_single_article
         return (
             Article.objects.all()
             .filter(id=article_id)
             .prefetch_related("user")
             .prefetch_related("correlation_software")
         )
-    all_articles = cache.get("all_articles")
-    if all_articles is None:
-        all_articles = Article.objects.filter(state=2).select_related("user").order_by("-updated_time")
+    if not all_articles:
+        all_articles = (
+            Article.objects.filter(state=2)
+            .prefetch_related("user")
+            .prefetch_related("correlation_software")
+            .order_by("-updated_time")
+        )
         cache.set("all_articles", all_articles, 45)
     return cache.get("all_articles")
 

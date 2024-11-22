@@ -22,7 +22,6 @@ class CategoryView(APIView):
         category_id = request.GET.get("category_id")
         if category_id:
             try:
-                category_id = category_id.replace(" ", "+")
                 category_id = int(decrypt(category_id))
             except ValueError:
                 serializer = self.serializer(data={"code": 400, "msg": "invalid category_id", "data": None})

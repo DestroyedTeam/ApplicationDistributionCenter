@@ -55,7 +55,7 @@ def get_questions(request):
 def question_detail_page(request):
     if request.method == "GET":
         try:
-            question_id = request.GET.get("question_id").replace(" ", "+")
+            question_id = request.GET.get("question_id")
             question_id = int(decrypt(question_id))
         except Exception as e:
             return render(request, "500.html", {"code": 500, "error": "参数异常，" + str(e)})

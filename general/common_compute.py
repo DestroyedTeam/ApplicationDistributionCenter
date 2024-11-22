@@ -89,8 +89,8 @@ def update_user_recent(user, article_id, software_id):
     from software.models import SoftWare
     from visitor.models import Visitor
 
-    article_id = int(decrypt(article_id.replace(" ", "+"))) if article_id else None
-    software_id = int(decrypt(software_id.replace(" ", "+"))) if software_id else None
+    article_id = int(decrypt(article_id)) if article_id else None
+    software_id = int(decrypt(software_id)) if software_id else None
     try:
         if user and article_id:
             if (
