@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -15,6 +16,18 @@ from visitor.models import Visitor
 from .common_compute import get_article_hot_degree, get_software_hot_degree
 
 
+def _check_and_set_cache(key: str, value: QuerySet, timeout: int = 100):
+    """
+    检查缓存是否存在，如果不存在则设置缓存
+    @param key: 缓存键
+    @param value: 缓存值
+    @param timeout: 缓存过期时间
+    """
+    actual_value = value if value.count() > 0 else []
+    cache.set(key, actual_value, timeout)
+    return actual_value
+
+
 def get_notices(software_id: int = None) -> list[Announcements]:
     notices: list[Announcements] = cache.get("notices")
     if not notices:
@@ -23,16 +36,44 @@ def get_notices(software_id: int = None) -> list[Announcements]:
     return cache.get("notices") if not software_id else [notice for notice in notices if notice.app.id == software_id]
 
 
-def get_comments():
-    comments = cache.get("comments")
+def get_comments(
+    software_id: int = None, article_id: int = None, page: int = None, page_size: int = None
+) -> QuerySet[Comment]:
+    # 如果没有传入 software_id 或 article_id，认为是无效请求
+    if not software_id and not article_id:
+        raise ValidationError("Either software_id or article_id must be provided to fetch comments.")
+
+    # 根据传入参数构建缓存键
+    if software_id:
+        cache_key = f"comments:software:{software_id}:{page}"
+    elif article_id:
+        cache_key = f"comments:article:{article_id}:{page}"
+    else:
+        raise ValidationError("Either software_id or article_id must be provided to fetch comments.")
+
+    # 尝试从缓存中获取数据
+    comments = cache.get(cache_key)
+
     if comments is None:
-        comments = list(
-            Comment.objects.filter(state=2)
-            .select_related("user", "correlation_article", "correlation_software")
-            .order_by("-created_time")
+        # 如果缓存中没有数据，查询数据库
+        if software_id:
+            comments = Comment.objects.filter(correlation_software_id=software_id)
+        elif article_id:
+            comments = Comment.objects.filter(correlation_article_id=article_id)
+
+        # 尝试从缓存中获取数据
+        comments = comments[(page - 1) * page_size : page * page_size]
+        comments = _check_and_set_cache(cache_key, comments)
+
+    elif comments.count() < page_size:
+        comments = (
+            Comment.objects.filter(correlation_software_id=software_id)
+            if software_id
+            else Comment.objects.filter(correlation_article_id=article_id)
         )
-        cache.set("comments", comments, 60)
-    return cache.get("comments")
+        comments = comments[(page - 1) * page_size : page * page_size]
+        comments = _check_and_set_cache(cache_key, comments)
+    return comments
 
 
 def get_matched_articles_by_article_id(article_id=None):
@@ -152,17 +193,21 @@ def get_software_by_software_id(software_id=None):
     return cache.get("software")
 
 
-def get_all_software():
-    all_software = cache.get("all_software")
-    if all_software is None:
-        all_software = list(
-            SoftWare.objects.filter(state=2)
-            .select_related("user", "category")
-            .prefetch_related("softwarescreenshots_set")
-            .order_by("-updated_time")
-        )
-        cache.set("all_software", all_software, 60 * 60)
-    return cache.get("all_software")
+def get_software(software_id: int = None) -> QuerySet[SoftWare]:
+    cache_key = f"software:{software_id}" if software_id else "all_software"
+    software = cache.get(cache_key)
+    if software is None:
+        if software_id:
+            software = SoftWare.objects.filter(id=software_id)
+        else:
+            software = (
+                SoftWare.objects.filter(state=2)
+                .order_by("-updated_time")
+                .select_related("user", "category")
+                .prefetch_related("softwarescreenshots_set")
+            )
+        software = _check_and_set_cache(cache_key, software)
+    return software
 
 
 def get_specific_user_software_by_username(username=None):

@@ -1,164 +1,115 @@
 # Create your views here.
-import json
 
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
+from rest_framework import status
+from rest_framework.serializers import Serializer
+from rest_framework.views import APIView
 
-from articles.models import Article
-from general.encrypt import decrypt, encrypt
-from general.init_cache import get_all_user, get_comments
-from software.models import SoftWare
-
-not_in_init_comments_parent = set()
-
-
-@require_POST
-def get_comments_data(request):
-    comments = get_comments()
-    if request.method == "POST":
-        if comments:
-            try:
-                post_data = json.loads(request.body)
-                query_id = decrypt(post_data["query_id"])
-                query_type = post_data["type"]
-            except ValueError:
-                return JsonResponse({"code": 402, "msg": "failed with invalid params"})
-            except TypeError:
-                return JsonResponse({"code": 407, "msg": "failed with wrong params"})
-            except AttributeError:
-                return JsonResponse({"code": 401, "msg": "failed with bad request body"})
-            if query_type == "article":
-                comments = [
-                    comment
-                    for comment in comments
-                    if comment.correlation_article and comment.correlation_article.id == int(query_id)
-                ]
-            if query_type == "software":
-                comments = [
-                    comment
-                    for comment in comments
-                    if comment.correlation_software and comment.correlation_software.id == int(query_id)
-                ]
-            if post_data.get("load_more"):
-                comments = [t for t in comments if encrypt(str(t.id)).decode("utf8") not in not_in_init_comments_parent]
-                if len(comments) < 10:
-                    comments = None
-                else:
-                    comments = comments[10:]
-            else:
-                comments = comments[:10]
-            if len(comments) <= 0:
-                return JsonResponse({"code": 404, "msg": "failed with no data"})
-            comments = [
-                {
-                    "comment_id": encrypt(str(comment.id)).decode("utf-8"),
-                    "visitor": {
-                        "user_id": encrypt(str(comment.visitor.id)).decode("utf-8"),
-                        "username": comment.visitor.nickname if comment.visitor.nickname else comment.visitor.username,
-                        "head_icon": comment.visitor.head_icon.url,
-                        "role": comment.visitor.role,
-                    },
-                    "content": comment.content,
-                    "correlation_article": comment.correlation_article.title if comment.correlation_article else "",
-                    "correlation_software": comment.correlation_software.name if comment.correlation_software else "",
-                    "created_time": comment.created_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "parent_id": encrypt(str(comment.parent.id)).decode("utf-8")
-                    if comment.parent
-                    else encrypt(str(0)).decode("utf-8"),
-                }
-                for comment in comments
-            ]
-            comments_id_list = [j["comment_id"] for j in comments]
-            comments_id_list.append(encrypt(str(0)).decode("utf-8"))
-            for i in comments:
-                if i["parent_id"] not in comments_id_list:
-                    not_in_init_comments_parent.add(i["parent_id"])
-            for i in not_in_init_comments_parent:
-                if query_type == "article":
-                    t = [
-                        t
-                        for t in get_comments()
-                        if i == encrypt(str(t.id)).decode("utf8") and t.correlation_article.id == int(query_id)
-                    ][0]
-                if query_type == "software":
-                    t = [
-                        t
-                        for t in get_comments()
-                        if i == encrypt(str(t.id)).decode("utf8") and t.correlation_software.id == int(query_id)
-                    ][0]
-                t = {
-                    "comment_id": encrypt(str(t.id)).decode("utf-8"),
-                    "visitor": {
-                        "user_id": encrypt(str(t.user.id)).decode("utf-8"),
-                        "username": t.visitor.nickname if t.visitor.nickname else t.visitor.username,
-                        "head_icon": t.visitor.head_icon.url,
-                        "role": t.visitor.role,
-                    },
-                    "content": t.content,
-                    "correlation_article": t.correlation_article.title if t.correlation_article else "",
-                    "correlation_software": t.correlation_software.name if t.correlation_software else "",
-                    "created_time": t.created_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "parent_id": encrypt(str(t.parent.id)).decode("utf-8")
-                    if t.parent
-                    else encrypt(str(0)).decode("utf-8"),
-                }
-                comments.append(t)
-            return JsonResponse({"code": 200, "msg": "success", "data": {"comments": comments}})
-        else:
-            return JsonResponse(
-                {
-                    "code": 404,
-                    "msg": "failed with no data",
-                }
-            )
-    else:
-        return JsonResponse({"code": 301, "msg": "failed with wrong request action"})
+from comments.serializers import CommentSerializer
+from common.encrypt_schema import EncryptIV
+from common.log_schema import LogType
+from general.encrypt import decrypt
+from general.init_cache import get_articles, get_comments, get_software
+from general.serializers import CommonResponseSerializer
+from utils.fields_filter import filter_empty_string
+from utils.logger import logger
+from visitor.models import Visitor
 
 
-@login_required
-@require_POST
-def publish_comment(request):
-    if request.method == "POST":
-        try:
-            user = [mat_user for mat_user in get_all_user() if mat_user.username == request.user.username]
-            if len(user) == 1:
-                user = user[0]
-            else:
-                return JsonResponse({"code": 403, "msg": "请先登录"})
-            content = request.POST.get("comment")
-            correlation_article_id = int(decrypt(request.POST.get("article_id").encode("utf-8")))
-            correlation_software_id = int(decrypt(request.POST.get("software_id").encode("utf-8")))
-            parent_id = int(decrypt(request.POST.get("comment_parent").encode("utf-8")))
-        except ValueError:
-            return JsonResponse({"code": 402, "msg": "failed with invalid params"})
-        except TypeError:
-            return JsonResponse({"code": 401, "msg": "failed with wrong params"})
-        except AttributeError:
-            return JsonResponse({"code": 406, "msg": "failed with wrong request body"})
-        if correlation_article_id:
-            correlation_article = Article.objects.get(id=correlation_article_id)
-        else:
-            correlation_article = None
-        if correlation_software_id:
-            correlation_software = SoftWare.objects.get(id=correlation_software_id)
-        else:
-            correlation_software = None
-        if parent_id:
-            parent = user.comment_set.get(id=parent_id).filter(state=2)
-        else:
-            parent = None
-        comment = user.comment_set.create(
-            content=content,
-            correlation_article=correlation_article,
-            correlation_software=correlation_software,
-            parent=parent,
+class CommentView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.serializer = CommonResponseSerializer
+
+    @staticmethod
+    def _log(
+        msg: str, data: dict, log_type: LogType = LogType.ERROR, serializer: type(Serializer) = CommonResponseSerializer
+    ):
+        logger.log(level=log_type.value, message=msg)
+        response_serializer = serializer(data=data)
+        return (
+            JsonResponse(response_serializer.data, status=data.get("code"))
+            if response_serializer.is_valid()
+            else JsonResponse(response_serializer.errors, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         )
-        if comment:
-            return JsonResponse(
-                {"code": 200, "msg": "success", "data": {"comment_id": encrypt(str(comment.id)).decode("utf-8")}}
+
+    def get(self, request):
+        # 校验请求参数
+        try:
+            query_id, comment_type, page, page_size = filter_empty_string(
+                request.GET.get("query_id"),
+                request.GET.get("comment_type"),
+                request.GET.get("page"),
+                request.GET.get("page_size"),
             )
-        else:
-            return JsonResponse({"code": 400, "msg": "failed when inserting data to database"})
-    else:
-        return JsonResponse({"code": 301, "msg": "failed with invalid request action"})
+            decrypt_iv = EncryptIV.articles.value if comment_type == "article" else EncryptIV.software.value
+            query_id = int(decrypt(query_id, iv=decrypt_iv))
+            page, page_size = int(page), int(page_size)
+        except Exception as e:
+            return self._log(
+                f"Error during parse request params: {e}",
+                {"code": status.HTTP_428_PRECONDITION_REQUIRED, "msg": "failed with invalid params"},
+            )
+
+        comments = (
+            get_comments(software_id=query_id, page=page, page_size=page_size)
+            if comment_type == "software"
+            else get_comments(article_id=query_id, page=page, page_size=page_size)
+        )
+
+        if len(comments) <= 0:
+            return self._log(
+                "Not Found any comments",
+                {"code": status.HTTP_404_NOT_FOUND, "msg": "Not Found any comments"},
+                LogType.WARNING,
+            )
+        try:
+            comment_serializer = CommentSerializer(comments, many=True)
+            serializer = self.serializer(
+                data={"code": status.HTTP_200_OK, "msg": "success", "data": {"comments": comment_serializer.data}}
+            )
+            return (
+                JsonResponse(serializer.validated_data, status=status.HTTP_200_OK)
+                if serializer.is_valid()
+                else JsonResponse(serializer.errors, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            )
+        except Exception as e:
+            return self._log(
+                f"Error during serialize comments: {e}",
+                {"code": status.HTTP_500_INTERNAL_SERVER_ERROR, "msg": "failed when serialize comments"},
+            )
+
+    def post(self, request):
+        try:
+            # NOTE: Only for test
+            user = Visitor.objects.get(id=1)
+            # user = Visitor.objects.get(django_user__username=request.user.username) if not request.user.is_anonymous else None
+            if not user:
+                return self._log(
+                    "Failed with unauthorized user",
+                    {"code": status.HTTP_401_UNAUTHORIZED, "msg": "failed with unauthorized user"},
+                )
+            content = filter_empty_string(request.POST.get("comment"))
+            if not content:
+                return self._log(
+                    "Failed with empty comment content",
+                    {"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with empty comment content"},
+                )
+            correlation_article_id = int(decrypt(request.POST.get("article_id"), iv=EncryptIV.articles.value))
+            correlation_software_id = int(decrypt(request.POST.get("software_id"), iv=EncryptIV.software.value))
+            # parent_id = int(decrypt(request.POST.get("comment_parent"), iv=EncryptIV.comments.value))
+        except Exception as e:
+            return self._log(
+                f"Error during parse request params: {e}",
+                {"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with invalid params"},
+            )
+
+        correlation_article = get_articles(article_id=correlation_article_id)
+        correlation_software = get_software(software_id=correlation_software_id)
+
+        if not correlation_article and not correlation_software:
+            return self._log(
+                f"Failed with invalid article_id: {correlation_article_id} or software_id: {correlation_software_id}",
+                {"code": status.HTTP_400_BAD_REQUEST, "msg": "failed with invalid article_id or software_id"},
+            )
+        # TODO: 评论的逻辑处理

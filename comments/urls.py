@@ -1,8 +1,8 @@
 from django.urls import path
 
-from . import views
+from .views import CommentView
 
 urlpatterns = [
-    path("api/comments", views.get_comments_data, name="get comments api"),
-    path("api/publish-comment", views.publish_comment, name="publish comment api"),
+    path("api/all", CommentView.as_view(), name="get comments api"),
+    # path("api/publish-comment", views.publish_comment, name="publish comment api"),
 ]

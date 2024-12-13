@@ -8,4 +8,4 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visitor
-        fields = ["id", "username"]
+        fields = ["id", "username", "head_icon", "role"]

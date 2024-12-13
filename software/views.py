@@ -7,7 +7,7 @@ from django.views.decorators.http import require_GET, require_POST
 from general.common_compute import compute_similarity
 from general.data_handler import storage_uploaded_image
 from general.encrypt import decrypt
-from general.init_cache import get_all_software, get_all_user, get_software_by_software_id
+from general.init_cache import get_all_user, get_software_by_software_id
 
 from .models import SoftWare
 
@@ -178,7 +178,7 @@ def get_software_detail(request):
 
 
 @require_POST
-def get_software(request):
+def get_software_page(request):
     if request.method == "POST":
         try:
             page_num = request.POST.get("page_num")
@@ -187,7 +187,7 @@ def get_software(request):
             page_num = int(page_num)
             if page_num < 1:
                 raise ValueError
-            matched_software = get_all_software()[page_num * 10 - 10 : page_num * 10]
+            matched_software = get_software_page()[page_num * 10 - 10 : page_num * 10]
         except ValueError:
             return JsonResponse({"code": 402, "error": "failed with invalid params"})
         except TypeError:
@@ -271,7 +271,7 @@ def software_detail_page(request):
             software.screenshots_set = software.softwarescreenshots_set.all()
             software.screenshots_set.count = len(software.screenshots_set)
             software.screenshots_set.count_list = [i for i in range(software.screenshots_set.count)]
-            related_software = [temp for temp in get_all_software() if temp.state == 2 and temp.id != software.id]
+            related_software = [temp for temp in get_software_page() if temp.state == 2 and temp.id != software.id]
             related_software = sorted(
                 related_software, key=lambda x: compute_similarity(software.description, x.description), reverse=True
             )[:6]

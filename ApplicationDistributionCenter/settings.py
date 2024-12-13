@@ -24,6 +24,9 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG", default=False)
 
+# Django logs dir
+LOG_DIR = env("LOG_DIR") or os.path.join(BASE_DIR, "logs")
+
 ALLOWED_HOSTS = ["*", "0.0.0.0"]
 
 # Application definition

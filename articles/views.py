@@ -14,12 +14,13 @@ from general.encrypt import decrypt
 from general.init_cache import get_articles
 from general.serializers import CommonResponseSerializer
 from software.models import SoftWare
+from utils.fields_filter import filter_empty_string
 from visitor.models import Visitor
 
 from .enums import ThumbType
 from .models import Article
 from .serializers import ArticleDetailSerializer, ArticleSerializer
-from .utils import UpdateArticleViewVolume, filter_empty_string
+from .utils import UpdateArticleViewVolume
 
 
 class ArticleAPIView(APIView):
@@ -103,8 +104,12 @@ class ArticleAPIView(APIView):
         """
         try:
             # NOTE:仅供测试使用
-            user = Visitor.objects.get(id=1)
-            # user = Visitor.objects.get(django_user__username=request.user.username) if not request.user.is_anonymous else None
+            # user = Visitor.objects.get(id=1)
+            user = (
+                Visitor.objects.get(django_user__username=request.user.username)
+                if not request.user.is_anonymous
+                else None
+            )
             if not user:
                 serializer = self.serializer(data={"code": status.HTTP_401_UNAUTHORIZED, "msg": "failed with no user"})
                 return (

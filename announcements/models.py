@@ -46,3 +46,6 @@ class Announcements(models.Model):
 
     def __str__(self):
         return self.title
+
+
+Announcements.objects.none()

@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_POST
 
 from general.data_handler import storage_uploaded_image, unload_image_from_server
-from general.init_cache import get_all_software, get_all_user, get_articles
+from general.init_cache import get_all_user, get_articles, get_software
 
 # Create your views here.
 
@@ -56,13 +56,11 @@ def search_result_page(request):
             try:
                 matched_software = [
                     x
-                    for x in get_all_software()
+                    for x in get_software()
                     if (search_str in x.name or search_str in x.description or search_str in x.tags)
                 ]
             except TypeError:
-                matched_software = [
-                    x for x in get_all_software() if (search_str in x.name or search_str in x.description)
-                ]
+                matched_software = [x for x in get_software() if (search_str in x.name or search_str in x.description)]
             matched_articles = [x for x in get_articles() if search_str in x.title or search_str in x.content]
             matched_user = [x for x in get_all_user() if search_str in x.username or search_str in x.nickname]
             matched_software_count = len(matched_software)
@@ -90,7 +88,7 @@ def search_result_page(request):
 @require_GET
 def home_page(request):
     if request.method == "GET":
-        all_software = get_all_software()
+        all_software = get_software()
         all_articles = get_articles()
         latest_articles = sorted(all_articles, key=lambda x: x.created_time, reverse=True)[:10]
         latest_articles_count = len(latest_articles)
@@ -109,7 +107,7 @@ def home_page(request):
 
 def publish_page(request):
     if request.method == "GET":
-        all_software = get_all_software()
+        all_software = get_software()
         try:
             publish_type = request.GET.get("type")
             if int(publish_type) == 1:
