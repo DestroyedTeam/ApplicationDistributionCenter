@@ -1,0 +1,703 @@
+{% extends 'front/base.html' %}
+{% load static %}
+{% block title %}
+    {% if user.nickname %}{{ user.nickname }}{% else %}
+        {{ user.username }}{% endif %}的个人中心
+{% endblock %}
+{% block style %}
+    <style>
+        a:hover {
+            color: #f1404b !important;
+        }
+
+        .media-content {
+            background-color: transparent !important;
+        }
+    </style>
+    <link rel="dns-prefetch" href="https://apps.bdimg.com/">
+    <link rel="stylesheet" id="wp-block-library-css" href="{% static 'user_center/css/style.min.css' %}"
+          type="text/css" media="all">
+    <link rel="stylesheet" id="classic-theme-styles-css" href="{% static 'user_center/css/classic-themes.min.css' %}"
+          type="text/css" media="all">
+    <link rel="stylesheet" id="_main-css" href="{% static 'user_center/css/main.min.css' %}" type="text/css"
+          media="all">
+    <link type="text/css" id="swiper" rel="stylesheet" href="{% static 'user_center/css/swiper.min.css' %}">
+    <link type="text/css" id="zibpay_css" rel="stylesheet" href="{% static 'user_center/css/main.css' %}">
+{% endblock %}
+{% block content %}
+    <div class="loading_container">
+        <div class="loading"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <body class="app-template-default single single-app sidebar_no app">
+    {% include 'front/sidebar.html' %}
+    <div class="main-content flex-fill">
+        {% include 'front/header-nav.html' %}
+        <div class="container">
+            <div class="author-header mb20 radius8 main-shadow main-bg full-widget-sm">
+                <div class="page-cover">
+                    <img class="fit-cover user-cover user-cover-id-1853 ls-is-cached lazyloaded"
+                         src="{{ user.user_center_cover.url }}"
+                         alt="用户封面" style="width: 100%">
+                    <div class="absolute linear-mask"></div>
+                </div>
+                <div class="header-content">
+                    <div class="flex header-info relative hh">
+                        <div class="flex0 header-avatar">
+                            <span
+                                    class="avatar-img"><img
+                                    alt="{{ user.username }}的头像"
+                                    src="{{ user.head_icon.url }}"
+                                    class="avatar avatar-id-1853 ls-is-cached lazyloaded"></span>
+                        </div>
+                        <div class="flex1">
+                            <div class="em12 name">
+                                <div class="flex ac flex1">
+                                    <a class="display-name text-ellipsis user_link_{{ request.session.logon_user.id }}"
+                                       href="" onmouseout="default_href()"
+                                       onmouseleave="default_href()"
+                                       onmousemove="re_href_user('{{ request.session.logon_user.id }}')"
+                                    >
+                                        {% if user.nickname %}{{ user.nickname }}{% else %}
+                                            {{ user.username }} {% endif %}
+                                    </a>
+                                    <span class="ml-2 rank" title="角色：{{ user.role }}">{{ user.role }}</span>
+                                </div>
+                            </div>
+                            <div class="desc user-identity flex ac hh">
+                                <span class="but"><i class="fa fa-envelope-o"></i>
+                                {{ user.django_user.email }}
+                                </span>
+                            </div>
+                            <div class="mt6 desc muted-2-color"></div>
+                        </div>
+                        {% if request.session.logon_user.id == user.id %}
+                            <div class="flex admin-buttons">
+                                <button type="button" onclick="update_personal_info_modal({{ user.id }})"
+                                        class="btn btn-lg px-4 text-lg radius-50 btn-outline-danger custom_btn-outline mb-2">
+                                    <svg t="1712750937802" class="icon icon-fw icon-fw-append"
+                                         viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                                         p-id="6643" width="200" height="200">
+                                        <path d="M621.461 675.042h-28.299v178.88c0 17.6-14.4 32-32 32H437.363c-17.6 0-32-14.4-32-32v-178.88h-32.211c-24.634 0-40.03-26.667-27.713-48L469.593 412c12.317-21.333 43.109-21.333 55.426 0l124.155 215.042c12.317 21.334-3.079 48-27.713 48z"
+                                              p-id="6644"></path>
+                                        <path d="M958.99 500.007a830.82 830.82 0 0 0-0.051-6.39l-0.021-1.369a33.988 33.988 0 0 0-0.379-4.378c-0.136-5.652-0.248-11.446-0.248-16.018 0-61.18-24.707-118.63-69.57-161.768-44.521-42.809-103.627-66.385-166.43-66.385-9.129 0-18.313 0.526-27.476 1.571-22.103-29.633-50.251-54.559-82.368-72.787-39.661-22.509-84.846-34.406-130.669-34.406-51.873 0-102.133 14.986-145.345 43.337-36.917 24.221-67.086 57.04-88.069 95.617-47.595 7.828-91.255 30.54-124.459 65.06-37.974 39.478-58.887 90.919-58.887 144.848 0 2.714 0.004 4.623 0.008 6.351-0.001 0.072-0.007 0.142-0.008 0.214v0.009c-0.002 0.144-0.003 0.29-0.003 0.434l-0.008 8.107c0.002 2.434 0.225 4.734 0.625 6.912 7.398 89.911 82.99 160.859 174.73 160.859h20.44c17.673 0 32-14.327 32-32s-14.327-32-32-32h-20.44c-61.287 0-111.229-49.866-111.331-111.18l-0.002-0.875c-0.005-1.86-0.009-3.85-0.009-6.833 0-76.592 62.772-141.769 142.908-148.38l18.652-1.539 7.803-17.011c32.862-71.642 104.85-117.933 183.398-117.933 69.774 0 133.688 35.49 170.967 94.935l11.775 18.776 21.718-4.421c11.956-2.434 24.086-3.668 36.053-3.668 94.841 0 172 73.639 172 164.153 0 7.508 0.252 17.275 0.464 25.295-1.437 59.99-51.183 108.679-111.202 108.679h-45.828c-17.673 0-32 14.327-32 32s14.327 32 32 32h45.828c46.123 0 89.724-17.922 122.771-50.464 29.603-29.15 47.628-66.962 51.612-107.676 0.667-2.701 1.042-5.609 1.057-8.73a552.32 552.32 0 0 0-0.006-2.946z"
+                                              p-id="6645"></path>
+                                    </svg>
+                                    更新个人信息
+                                </button>
+                                <button type="button"
+                                        onclick="cancel_account_modal({{ user.id }})"
+                                        class="ml-2 btn btn-lg px-4 text-lg radius-50 btn-danger custom_btn-d btn_down mr-3 mb-2">
+                                    <svg t="1712735626097" class="icon icon-fw icon-fw-append"
+                                         viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                                         p-id="5445" width="200" height="200">
+                                        <path d="M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z"
+                                              fill="#FF000F"
+                                              p-id="5446"></path>
+                                        <path d="M158.4 283.328m34.24 0l635.52 0q34.24 0 34.24 34.24l0 0.064q0 34.24-34.24 34.24l-635.52 0q-34.24 0-34.24-34.24l0-0.064q0-34.24 34.24-34.24Z"
+                                              fill="#FFFFFF" p-id="5447"></path>
+                                        <path d="M378.432 192m22.848 0l218.304 0q22.848 0 22.848 22.848l0 22.848q0 22.848-22.848 22.848l-218.304 0q-22.848 0-22.848-22.848l0-22.848q0-22.848 22.848-22.848Z"
+                                              fill="#FFFFFF" p-id="5448"></path>
+                                        <path d="M729.408 283.328v457.344C729.408 791.04 688.512 832 638.08 832h-257.28c-50.496 0-91.392-40.96-91.392-91.328V283.328h440z m-264.32 138.496h-20.288a22.848 22.848 0 0 0-22.848 22.848v228.416c0 12.608 10.24 22.784 22.848 22.784h20.288c12.608 0 22.848-10.24 22.848-22.784v-228.48a22.848 22.848 0 0 0-22.848-22.784z m132.032 0h-20.352a22.848 22.848 0 0 0-22.848 22.848v228.416c0 12.608 10.24 22.784 22.848 22.784h20.352c12.608 0 22.848-10.24 22.848-22.784v-228.48a22.848 22.848 0 0 0-22.848-22.784z"
+                                              fill="#FFFFFF" p-id="5449"></path>
+                                    </svg>
+                                    注销账户
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        个人简介：{{ user.description|default:'这里什么也没有！' }}
+                    </div>
+                </div>
+            </div>
+            <div class="author-tab zib-widget">
+                <div class="affix-header-sm" offset-top="6">
+                    <ul id="tabs" style="display: flex; flex-direction: row; justify-content: space-evenly"
+                        class="list-inline scroll-x mini-scrollbar tab-nav-theme">
+                        <li class="active">
+                            <a href="#author-tab-article" onclick="changeTab(this.parentElement)"
+                               aria-expanded="true">文章
+                                <count class="opacity8 ml3">{{ user.article_set.count }}</count>
+                            </a>
+                        </li>
+                        {% if request.session.logon_user.id == user.id %}
+                            <li class="">
+                                <a href="#author-tab-comment" onclick="changeTab(this.parentElement)"
+                                   aria-expanded="false">评论
+                                    <count class="opacity8 ml3">{{ user.comment_set.count }}</count>
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="">
+                            <a href="#author-tab-software" onclick="changeTab(this.parentElement)"
+                               aria-expanded="false">软件
+                                <count class="opacity8 ml3">{{ published_software_count }}</count>
+                            </a>
+                        </li>
+                        {% if request.session.logon_user.id == user.id %}
+                            <li class="">
+                                <a href="#author-tab-recent-browsing" onclick="changeTab(this.parentElement)"
+                                   aria-expanded="false">最近浏览
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="tab-content main-tab-content">
+                    <div class="ajaxpager tab-pane active" id="author-tab-article">
+                        {% if published_articles_count < 1 %}
+                            <div class="text-center ajax-item " style="padding:100px 0;">
+                                <img style="width:280px;opacity: .7;"
+                                     src="{% static 'user_center/img/null-post.svg' %}">
+                                <p style="margin-top:20px;" class="em09 muted-3-color separator">
+                                    {% if request.session.logon_user.id == user.id %}
+                                        您{% else %}该用户{% endif %}还没有发表过文章
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="row mb-n4">
+                                {% for article in user.article_set.all %}
+                                    <div class="col-6 col-md-4">
+                                        <div class="card-post list-item">
+                                            <div class="media media-4x3 p-0 rounded">
+                                                <a class="media-content article_link_{{ article.id }}" href=""
+                                                   onmouseout="default_href()" onmouseleave="default_href()"
+                                                   onmousemove="re_href_article('{{ article.id }}')"
+                                                   data-src="{{ article.cover.url }}"
+                                                   data-was-processed="true"
+                                                   style="background-image: url({{ article.cover.url }});">
+                                                </a>
+                                            </div>
+                                            <div class="list-content">
+                                                <div class="list-body">
+                                                    <a href="" onmouseleave="default_href()"
+                                                       onmouseout="default_href()"
+                                                       onmousemove="re_href_article('{{ article.id }}')"
+                                                       class="list-title text-md overflowClip_2 article_link_{{ article.id }}">
+                                                        {{ article.title }} </a>
+                                                </div>
+                                                <div class="list-footer">
+                                                    <div class="d-flex flex-fill align-items-center">
+                                                        <a href=""
+                                                           class="flex-avatar mr-1 user_link_{{ article.user.id }}"
+                                                           onmouseout="default_href()" onmouseleave="default_href()"
+                                                           onmousemove="re_href_user('{{ article.user.id }}')"
+                                                           target="_blank">
+                                                            <img src="{{ article.user.head_icon.url }}"
+                                                                 width="20" height="20" alt="头像"
+                                                                 class="avatar avatar-20 wp-user-avatar wp-user-avatar-20 photo avatar-default">
+                                                        </a>
+                                                        <a href=""
+                                                           class="d-none d-md-inline-block text-xs user_link_{{ article.user.id }}"
+                                                           onmouseout="default_href()" onmouseleave="default_href()"
+                                                           onmousemove="re_href_user('{{ article.user.id }}')"
+                                                           target="_blank">
+                                                            {% if article.user.nickname %}
+                                                                {{ article.user.nickname }}
+                                                            {% else %}
+                                                                {{ article.user.username }}
+                                                            {% endif %}
+                                                        </a>
+                                                        <div class="flex-fill"></div>
+                                                        <div class="text-muted text-xs">
+                                                        <span class="views mr-1"><i
+                                                                class="iconfont icon-chakan mr-1"></i>
+                                                            {{ article.view_volume }}
+                                                        </span><i
+                                                                class="iconfont icon-like mr-1"></i>
+                                                            {{ article.thumbs_volume }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="ajax-pag hide">
+                            <div class="next-page ajax-next"><a href=""></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ajaxpager tab-pane" id="author-tab-software">
+                        {% if published_software_count < 1 %}
+                            <div class="text-center ajax-item " style="padding:60px 0;"><img
+                                    style="width:280px;opacity: .7;"
+                                    src="{% static 'user_center/img/null-software.svg' %}">
+                                <p style="margin-top:20px;" class="em09 muted-3-color separator">
+                                    {% if request.session.logon_user.id == user.id %}
+                                        您{% else %}该用户{% endif %}还没有投稿软件
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="row mb-n4">
+                                {% for software in current_software_set %}
+                                    <div class="col-6 col-md-4">
+                                        <div class="card-post list-item">
+                                            <div class="media media-4x3 p-0 rounded">
+                                                <a class="media-content software_link_{{ software.id }}" href=""
+                                                   onmouseout="default_href()" onmouseleave="default_href()"
+                                                   onmousemove="re_href_software('{{ software.id }}')"
+                                                   data-was-processed="true"
+                                                   style="background-image: url(
+                                                           {% if software.state == 2 %}{{ software.icon.url }}{% else %}{{ "/media/software/icon/null-icon.png" }}{% endif %});">
+                                                    <!--  update software.icon.url -->
+                                                </a>
+                                            </div>
+                                            <div class="list-content">
+                                                <div class="list-body">
+                                                    <a href="" onmouseleave="default_href()"
+                                                       onmouseout="default_href()"
+                                                       onmousemove="re_href_software('{{ software.id }}')"
+                                                       class="list-title text-md overflowClip_2 software_link_{{ software.id }}">
+                                                        {{ software.name }} </a>
+                                                </div>
+                                                <div class="list-footer">
+                                                    <div class="d-flex flex-fill align-items-center">
+                                                        <a href=""
+                                                           class="flex-avatar mr-1 user_link_{{ software.user.id }}"
+                                                           onmouseout="default_href()" onmouseleave="default_href()"
+                                                           onmousemove="re_href_user('{{ software.user.id }}')"
+                                                           target="_blank">
+                                                            <img src="{{ software.user.head_icon.url }}"
+                                                                 width="20" height="20" alt="头像"
+                                                                 class="avatar avatar-20 wp-user-avatar wp-user-avatar-20 photo avatar-default">
+                                                        </a>
+                                                        <a href=""
+                                                           class="d-none d-md-inline-block text-xs user_link_{{ software.user.id }}"
+                                                           onmouseout="default_href()" onmouseleave="default_href()"
+                                                           onmousemove="re_href_user('{{ software.user.id }}')"
+                                                           target="_blank">
+                                                            {% if software.user.nickname %}
+                                                                {{ software.user.nickname }}
+                                                            {% else %}
+                                                                {{ software.user.username }}
+                                                            {% endif %}
+                                                        </a>
+                                                        <div class="flex-fill"></div>
+                                                        <div class="text-muted text-xs">
+                                                        <span class="views mr-1"><i
+                                                                class="iconfont icon-chakan mr-1"></i>
+                                                            {{ software.view_volume }}
+                                                        </span><i
+                                                                class="iconfont icon-like mr-1"></i>
+                                                            {{ software.thumbs_volume }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="ajax-pag hide">
+                            <div class="next-page ajax-next"><a href=""></a>
+                            </div>
+                        </div>
+                    </div>
+                    {% if request.session.logon_user.id == user.id %}
+                        <div class="ajaxpager tab-pane" id="author-tab-comment">
+                            {% if published_comments_count < 1 %}
+                                <div class="text-center ajax-item posts-item no_margin">
+                                    <img style="width:280px;opacity: .7;"
+                                         src="{% static 'user_center/img/null-comment.svg' %}">
+                                    <p style="margin-top:20px;" class="em09 muted-3-color separator">
+                                        {% if request.session.logon_user.id == user.id %}
+                                            您{% else %}该用户{% endif %}还没有评论
+                                    </p>
+                                </div>
+                            {% else %}
+                                <ul class="comment-list" id="comment-list">
+                                    {% for comment in user.comment_set.all %}
+                                        <li class="comment even thread-even depth-1 comment">
+                                            <div class="comment_body d-flex flex-fill">
+                                                <section class="d-flex flex-fill flex-column">
+                                                    <div class="comment-content d-inline-block text-sm">
+                                                        <blockquote class="text-center">
+                                                            <p>{{ comment.content }}
+                                                                {% if comment.state == 1 %}
+                                                                    <span>（待审核）</span>
+                                                                {% elif comment.state == 3 %}
+                                                                    <span>（已删除）</span>
+                                                                {% endif %}
+                                                            </p>
+                                                            <p style="display: flex; flex-direction: row; justify-content: space-around">
+                                                                <span>发表在
+                                                                    {% if comment.correlation_article %}
+                                                                        文章《<a href="" onmouseleave="default_href()"
+                                                                                onmouseout="default_href()"
+                                                                                onmousemove="re_href_article('{{ comment.correlation_article.id }}')"
+                                                                                class=" article_link_{{ comment.correlation_article.id }}">
+                                                                            {{ comment.correlation_article.title }}</a>》
+                                                                    {% elif comment.correlation_software %}
+                                                                        软件《<a href="" onmouseleave="default_href()"
+                                                                                onmouseout="default_href()"
+                                                                                onmousemove="re_href_software('{{ comment.correlation_software.id }}')"
+                                                                                class="software_link_{{ comment.correlation_software.id }}">
+                                                                            {{ comment.correlation_software.name }}</a>》
+                                                                    {% endif %}
+                                                                </span>
+                                                                <span>
+                                                                    发表于 <span class="info mr-2"><i
+                                                                        class="iconfont icon-time mr-1"></i><time
+                                                                        itemprop="datePublished" data-type="local"
+                                                                        datetime="{{ comment.created_time|date:"Y-m-d H:i:sO" }}"></time>
+                                                                    </span>
+                                                                </span>
+                                                            </p>
+                                                        </blockquote>
+                                                    </div>
+                                                </section>
+                                            </div>
+                                        </li><!-- #comment-## -->
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <div class="ajax-pag hide">
+                                <div class="next-page ajax-next"><a href=""></a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if request.session.logon_user.id == user.id %}
+                        <div class="ajaxpager tab-pane text-center" id="author-tab-recent-browsing">
+                            {% if recent_browsing_count < 1 %}
+                                <div class="text-center ajax-item " style="padding:40px 0;"><img
+                                        style="width:280px;opacity: .7;"
+                                        src="{% static '/user_center/img/null-recent.svg' %}">
+                                    <p style="margin-top:20px;" class="em09 muted-3-color separator">
+                                        {% if request.session.logon_user.id == user.id %}
+                                            您{% else %}该用户{% endif %}最近什么也没浏览
+                                    </p>
+                                </div>
+                            {% else %}
+                                <div class="row mb-n4">
+                                    {% for record in user.recentbrowsing_set.all %}
+                                        {% if record.article %}
+                                            <div class="col-6 col-md-4">
+                                                <div class="card-post list-item">
+                                                    <div class="media media-4x3 p-0 rounded">
+                                                        <a class="media-content article_link_{{ record.article.id }}"
+                                                           href=""
+                                                           onmouseout="default_href()" onmouseleave="default_href()"
+                                                           onmousemove="re_href_article('{{ record.article.id }}')"
+                                                           data-src="{{ record.article.cover.url }}"
+                                                           data-was-processed="true"
+                                                           style="background-image: url({{ record.article.cover.url }});">
+                                                        </a>
+                                                    </div>
+                                                    <div class="list-content">
+                                                        <div class="list-body">
+                                                            <a href="" onmouseleave="default_href()"
+                                                               onmouseout="default_href()"
+                                                               onmousemove="re_href_article('{{ record.article.id }}')"
+                                                               class="list-title text-md overflowClip_2 article_link_{{ record.article.id }}">
+                                                                {{ record.article.title }} </a>
+                                                        </div>
+                                                        <div class="list-footer">
+                                                            <div class="d-flex flex-fill align-items-center">
+                                                                <a href=""
+                                                                   class="flex-avatar mr-1 user_link_{{ record.article.user.id }}"
+                                                                   onmouseout="default_href()"
+                                                                   onmouseleave="default_href()"
+                                                                   onmousemove="re_href_user('{{ record.article.user.id }}')"
+                                                                   target="_blank">
+                                                                    <img src="{{ record.article.user.head_icon.url }}"
+                                                                         width="20" height="20" alt="头像"
+                                                                         class="avatar avatar-20 wp-user-avatar wp-user-avatar-20 photo avatar-default">
+                                                                </a>
+                                                                <a href=""
+                                                                   class="d-none d-md-inline-block text-xs user_link_{{ record.article.user.id }}"
+                                                                   onmouseout="default_href()"
+                                                                   onmouseleave="default_href()"
+                                                                   onmousemove="re_href_user('{{ record.article.user.id }}')"
+                                                                   target="_blank">
+                                                                    {% if record.article.user.nickname %}
+                                                                        {{ record.article.user.nickname }}
+                                                                    {% else %}
+                                                                        {{ record.article.user.username }}
+                                                                    {% endif %}
+                                                                </a>
+                                                                <div class="flex-fill"></div>
+                                                                <div class="text-muted text-xs">
+                                                        <span class="views mr-1"><i
+                                                                class="iconfont icon-chakan mr-1"></i>
+                                                            {{ record.article.view_volume }}
+                                                        </span><i
+                                                                        class="iconfont icon-like mr-1"></i>
+                                                                    {{ record.article.thumbs_volume }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% elif record.software %}
+                                            <div class="col-6 col-md-4">
+                                                <div class="card-post list-item">
+                                                    <div class="media media-4x3 p-0 rounded">
+                                                        <a class="media-content software_link_{{ record.software.id }}"
+                                                           href=""
+                                                           onmouseout="default_href()" onmouseleave="default_href()"
+                                                           onmousemove="re_href_software('{{ record.software.id }}')"
+                                                           data-was-processed="true"
+                                                           style="background-image: url({% if record.software.state == 2 %}{{ record.software.icon.url }}{% else %}{{ "/media/software/icon/null-icon.png" }}{% endif %});">
+                                                            <!-- update record.software.icon.url -->
+                                                        </a>
+                                                    </div>
+                                                    <div class="list-content">
+                                                        <div class="list-body">
+                                                            <a href="" onmouseleave="default_href()"
+                                                               onmouseout="default_href()"
+                                                               onmousemove="re_href_software('{{ record.software.id }}')"
+                                                               class="list-title text-md overflowClip_2 software_link_{{ record.software.id }}">
+                                                                {{ record.software.name }} </a>
+                                                        </div>
+                                                        <div class="list-footer">
+                                                            <div class="d-flex flex-fill align-items-center">
+                                                                <a href=""
+                                                                   class="flex-avatar mr-1 user_link_{{ record.software.user.id }}"
+                                                                   onmouseout="default_href()"
+                                                                   onmouseleave="default_href()"
+                                                                   onmousemove="re_href_user('{{ record.software.user.id }}')"
+                                                                   target="_blank">
+                                                                    <img src="{{ record.software.user.head_icon.url }}"
+                                                                         width="20" height="20" alt="头像"
+                                                                         class="avatar avatar-20 wp-user-avatar wp-user-avatar-20 photo avatar-default">
+                                                                </a>
+                                                                <a href=""
+                                                                   class="d-none d-md-inline-block text-xs user_link_{{ record.software.user.id }}"
+                                                                   onmouseout="default_href()"
+                                                                   onmouseleave="default_href()"
+                                                                   onmousemove="re_href_user('{{ record.software.user.id }}')"
+                                                                   target="_blank">
+                                                                    {% if record.software.user.nickname %}
+                                                                        {{ record.software.user.nickname }}
+                                                                    {% else %}
+                                                                        {{ record.software.user.username }}
+                                                                    {% endif %}
+                                                                </a>
+                                                                <div class="flex-fill"></div>
+                                                                <div class="text-muted text-xs">
+                                                        <span class="views mr-1"><i
+                                                                class="iconfont icon-chakan mr-1"></i>
+                                                            {{ record.software.view_volume }}
+                                                        </span><i
+                                                                        class="iconfont icon-like mr-1"></i>
+                                                                    {{ record.software.thumbs_volume }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="ajax-pag hide">
+                                <div class="next-page ajax-next"><a href=""></a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+{% endblock %}
+{% block script %}
+    <script>
+		function changeTab(tab) {
+			let tabs = document.getElementById('tabs').getElementsByTagName('li');
+			for (let i = 0; i < tabs.length; i++) {
+				tabs[i].classList.remove('active');
+				let temp = $('#' + tabs[i].children[0].getAttribute('href').split('#')[1])[0];
+				temp.classList.remove('active');
+			}
+			let tab_con = $('#' + tab.children[0].getAttribute('href').split('#')[1])[0];
+			tab_con.classList.add('active');
+			tab.classList.add('active');
+		}
+
+		$(document).ready(function () {
+			format_time_block();
+		})
+
+		async function update_personal_info_modal(id) {
+			let current_user_info = {
+				'username': '{{ user.username }}',
+				'nickname': '{{ user.nickname }}',
+				'email': '{{ user.django_user.email }}',
+				'description': '{{ user.description }}',
+				'head_icon': '{{ user.head_icon.url }}',
+				'user_center_cover': '{{ user.user_center_cover }}',
+			};
+			const steps = [
+				{title: '变更用户名', text: '修改登录用户名', input: 'text', value: current_user_info.username},
+				{title: '变更昵称', text: '修改用户昵称', input: 'text', value: current_user_info.nickname},
+				{title: '变更邮箱', text: '修改个人邮箱', input: 'email', value: current_user_info.email},
+				{title: '变更个人简介', text: '修改个人简介信息', input: 'text', value: current_user_info.description},
+				{title: '变更头像', text: '修改用户头像', input: 'file'},
+				{title: '变更用户中心封面', text: '修改用户中心封面', input: 'file'},
+			];
+
+			const swalQueueStep = async (step) => {
+				const result = await Swal.fire({
+					title: step.title,
+					text: step.text,
+					input: step.input,
+					inputValue: step.value,
+					confirmButtonText: '下一步 &rarr;',
+					showCancelButton: true,
+					cancelButtonText: '取消',
+					...step.options
+				});
+				if (result.value) {
+					if (result.value instanceof File) {
+						console.log(result.value);
+						if (!result.value.type.match('image.*')) {
+							showAlert({status: 4, msg: '请上传图片文件！'});
+						} else if (!(result.value.size <= (10 * 1024 * 1024))) {
+							showAlert({status: 4, msg: '图片文件大小不能超过10MB！'});
+						} else if (!result.value) {
+							showAlert({status: 4, msg: '无效的图像文件！'});
+						} else {
+							return result.value;
+						}
+						return null;
+					}
+					return result.value;
+				} else if (result.dismiss === Swal.DismissReason.cancel) {
+					showAlert({status: 3, msg: '用户主动取消！'});
+					console.log('用户主动取消更新信息！');
+				}
+			};
+
+			try {
+				const info = [];
+				for (const step of steps) {
+					const item = await swalQueueStep(step);
+					info.push(item);
+				}
+				Swal.fire({
+					title: '是否继续？',
+					html: `你的个人信息: <pre><code>${JSON.stringify(info)}</code></pre>`,
+					showCancelButton: true,
+					cancelButtonText: '取消',
+					confirmButtonText: '确认',
+				}).then((result) => {
+					if (result.isConfirmed) {
+						let form_data = new FormData();
+						form_data.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+						form_data.append('id', id);
+						form_data.append('username', info[0]);
+						form_data.append('nickname', info[1]);
+						form_data.append('email', info[2]);
+						form_data.append('description', info[3]);
+						if (!(info[4] === undefined || info[4] === null)) {
+							form_data.append('head_icon', info[4]);
+						}
+						if (!(info[5] === undefined || info[5] === null)) {
+							form_data.append('user_center_cover', info[5]);
+						}
+						if (form_data) {
+							$.ajax({
+								url: '/visitor/api/update/',
+								type: 'POST',
+								data: form_data,
+								processData: false, // 告诉jQuery不要去处理发送的数据
+								contentType: false, // 告诉jQuery不要去设置Content-Type请求头
+								header: {
+									'X-CSRFToken': '{{ csrf_token }}'
+								},
+								success: function (data) {
+									if (data.code === 200) {
+										swal.fire({
+											icon: 'success',
+											title: '更新成功',
+											text: '您的个人信息已更新',
+											showConfirmButton: false,
+											timer: 1500,
+										}).then(() => {
+											window.location.reload();
+										})
+									} else {
+										swal.fire({
+											icon: 'error',
+											title: '更新失败',
+											text: data.msg,
+										})
+									}
+								},
+								error: function () {
+									swal.fire({
+										icon: 'error',
+										title: '更新失败',
+										text: '服务器错误，请稍后再试',
+									})
+								}
+							})
+						}
+					}
+				})
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+
+		function cancel_account_modal(id) {
+			swal.fire({
+				icon: 'error',
+				title: '确定要注销账户吗？',
+				text: '注销账户后，您的所有数据将被清空，无法恢复！',
+				showCancelButton: true,
+				confirmButtonText: '确定',
+				cancelButtonText: '取消',
+				confirmButtonColor: '#d33',
+				cancelButtonColor: '#3085d6',
+			}).then((result) => {
+				if (result.isConfirmed) {
+					$.ajax({
+						url: '/visitor/api/delete/',
+						type: 'POST',
+						data: {
+							'csrfmiddlewaretoken': '{{ csrf_token }}',
+							'id': id,
+						},
+						success: function (data) {
+							if (data.code === 200) {
+								swal.fire({
+									icon: 'success',
+									title: '注销成功',
+									text: '您的账户已注销，即将跳转到首页',
+									showConfirmButton: false,
+									timer: 1500,
+								}).then(() => {
+									window.location.href = '/';
+								})
+							} else {
+								swal.fire({
+									icon: 'error',
+									title: '注销失败',
+									text: data.msg,
+								})
+							}
+						},
+						error: function () {
+							swal.fire({
+								icon: 'error',
+								title: '注销失败',
+								text: '服务器错误，请稍后再试',
+							})
+						}
+					})
+				}
+			})
+		}
+    </script>
+{% endblock %}

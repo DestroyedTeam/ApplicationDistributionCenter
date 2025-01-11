@@ -57,7 +57,7 @@
 # def write_something():
 #     # 连接到数据库
 #     connection = pymysql.connect(host='localhost',
-#                                  user='root',
+#                                  visitor='root',
 #                                  password='ic3344',
 #                                  database='synthesisyouwantmacapplicationdistributioncenter')
 #

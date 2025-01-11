@@ -1,14 +1,15 @@
 import jieba
 from django.db import models
-from frontenduser.models import FrontEndUser
+
+from visitor.models import Visitor
 
 
 # Create your models here.
 class Questions(models.Model):
     id = models.AutoField(primary_key=True)
     question = models.TextField()
-    state = models.IntegerField(default=2, choices=((1, '已解决'), (2, '待解决')))
-    publisher = models.ForeignKey('frontenduser.FrontEndUser', on_delete=models.CASCADE)
+    state = models.IntegerField(default=2, choices=((1, "已解决"), (2, "待解决")))
+    publisher = models.ForeignKey("visitor.Visitor", on_delete=models.CASCADE)
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
 
@@ -28,10 +29,10 @@ class Questions(models.Model):
 
     class Answer(models.Model):
         id = models.AutoField(primary_key=True)
-        question = models.ForeignKey('Questions', on_delete=models.CASCADE)
+        question = models.ForeignKey("Questions", on_delete=models.CASCADE)
         content = models.TextField()
-        respondent = models.ForeignKey(FrontEndUser, on_delete=models.CASCADE)
-        is_adopt = models.IntegerField(default=0, choices=((0, '未采纳'), (1, '已采纳')))
+        respondent = models.ForeignKey(Visitor, on_delete=models.CASCADE)
+        is_adopt = models.IntegerField(default=0, choices=((0, "未采纳"), (1, "已采纳")))
         created_time = models.DateTimeField(auto_now_add=True, null=True)
 
         def short_content(self):
@@ -41,15 +42,15 @@ class Questions(models.Model):
             return self.content
 
         class Meta:
-            verbose_name = '回复中心'
+            verbose_name = "回复中心"
             verbose_name_plural = verbose_name
 
         def __str__(self):
             return str(self.id)
 
     class Meta:
-        ordering = ['-created_time']
-        verbose_name = '反馈中心'
+        ordering = ["-created_time"]
+        verbose_name = "反馈中心"
         verbose_name_plural = verbose_name
 
     def __str__(self):

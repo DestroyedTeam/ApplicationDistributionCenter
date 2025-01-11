@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('questions', '0002_alter_answer_content'),
+        ("questions", "0002_alter_answer_content"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='answer',
-            name='created_time',
+            model_name="answer",
+            name="created_time",
             field=models.DateTimeField(auto_now_add=True, null=True),
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('category', '0002_category_state'),
+        ("category", "0002_category_state"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='category',
-            name='state',
-            field=models.IntegerField(choices=[(1, '停用'), (2, '正常')], db_index=True, default=2),
+            model_name="category",
+            name="state",
+            field=models.IntegerField(choices=[(1, "停用"), (2, "正常")], db_index=True, default=2),
         ),
     ]

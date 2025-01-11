@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-import favorites.models
+from favorites import models
 
 
 # Register your models here.
-# @admin.register(favorites.models.Favorites)
-# class FavoritesAdmin(admin.ModelAdmin):
-#     list_display = ['id', 'user','correlation_article', 'correlation_software', 'created_time']
+@admin.register(models.Favorites)
+class FavoritesAdmin(admin.ModelAdmin):
+    list_display = ["id", "visitor", "correlation_article", "correlation_software", "created_time"]

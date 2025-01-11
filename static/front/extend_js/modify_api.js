@@ -52,7 +52,7 @@ function thumb_software_or_not(csrf_token, thumb_type, software_id) {
 }
 
 async function thumb_article_or_not(csrftoken, type, article_id) {
-	let url = '/commentswitharticles/api/thumb/article/'; //初始化url
+	let url = '/articles/api/thumb/article/'; //初始化url
 	let data = {
 		article_id: encrypt_param(article_id.toString()),
 		thumb_type: type.toString(),

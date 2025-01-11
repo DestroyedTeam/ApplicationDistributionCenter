@@ -1,12 +1,12 @@
 from django.utils.deprecation import MiddlewareMixin
 
-from general.init_cache import get_hot_articles_and_software, get_all_category
 from general.common_compute import update_user_recent
+from general.init_cache import get_all_category, get_hot_articles_and_software
 
 
 class AppendMiddleware(MiddlewareMixin):
     def __init__(self, *args, **kwargs):
-        super(AppendMiddleware, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.user = None
 
     def process_request(self, request):
@@ -18,8 +18,11 @@ class AppendMiddleware(MiddlewareMixin):
         request.hot_articles, request.hot_software = hot_articles[:3], hot_software[:3]
         request.categories = get_all_category()
         if request.user.is_authenticated:
-            if '/article/details/' in request.path or '/software/details/' in request.path:
-                update_user_recent(request.session.get('logon_user'), request.GET.get('article_id'), request.GET.get('software_id'))
+            # TODO: Updated routes, here will be update too.
+            if "/article/details/" in request.path or "/software/details/" in request.path:
+                update_user_recent(
+                    request.session.get("logon_user"), request.GET.get("article_id"), request.GET.get("software_id")
+                )
 
     def process_response(self, request, response):
         return response

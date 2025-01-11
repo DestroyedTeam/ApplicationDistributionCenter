@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('software', '0004_alter_software_state'),
+        ("software", "0004_alter_software_state"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='software',
-            name='state',
-            field=models.IntegerField(choices=[(1, '未审核'), (2, '已上架'), (3, '已下架'), (4, '不展示')], default=1),
+            model_name="software",
+            name="state",
+            field=models.IntegerField(choices=[(1, "未审核"), (2, "已上架"), (3, "已下架"), (4, "不展示")], default=1),
         ),
     ]
