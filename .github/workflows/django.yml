@@ -35,8 +35,10 @@ jobs:
         DEBUG: ${{ secrets.DEBUG }}
         # Django secret key
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        # logs directory
+        LOG_DIR: ${{ secrets.LOG_DIR }}
         
-        # mysql database configuration
+        # postgres database configuration
         POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
         POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
         POSTGRES_DATABASE: ${{ secrets.POSTGRES_DATABASE }}
