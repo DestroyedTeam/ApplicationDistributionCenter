@@ -5,6 +5,7 @@ description = ""
 authors = ["VincentAdamNemessis <vincentadamnemessis@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"
