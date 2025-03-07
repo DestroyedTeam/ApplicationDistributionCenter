@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('questions', '0007_alter_answer_respondent'),
+        ("questions", "0007_alter_answer_respondent"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='answer',
-            name='is_adopt',
-            field=models.IntegerField(choices=[(0, '未采纳'), (1, '已采纳')], default=0),
+            model_name="answer",
+            name="is_adopt",
+            field=models.IntegerField(choices=[(0, "未采纳"), (1, "已采纳")], default=0),
         ),
     ]

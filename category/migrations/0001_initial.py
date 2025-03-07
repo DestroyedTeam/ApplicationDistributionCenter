@@ -4,25 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Category',
+            name="Category",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=200)),
-                ('slug', models.CharField(max_length=200, null=True)),
-                ('icon', models.ImageField(null=True, upload_to='category/icons/')),
-                ('description', models.TextField(blank=True, null=True)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=200)),
+                ("slug", models.CharField(max_length=200, null=True)),
+                ("icon", models.ImageField(null=True, upload_to="category/icons/")),
+                ("description", models.TextField(blank=True, null=True)),
             ],
             options={
-                'verbose_name': '软件分类',
-                'verbose_name_plural': '软件分类',
+                "verbose_name": "软件分类",
+                "verbose_name_plural": "软件分类",
             },
         ),
     ]

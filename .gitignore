@@ -171,3 +171,9 @@ static/import_export/
 static/login/
 static/user_center/
 
+# local files only for development
+**/*-local*
+
+# local files only for production
+static/**
+media/**

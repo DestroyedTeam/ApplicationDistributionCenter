@@ -1,44 +1,52 @@
 import base64
+
 from Crypto.Cipher import AES
 
+from general.common_exceptions import DecryptError, EncryptError
+from utils.logger import logger
 
-def encrypt(instr, key=b'frontendencryptx', iv=b'frontendencryptx'):
-    temp_str = pad(instr)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    ret = base64.b64encode(cipher.encrypt(temp_str))
+
+def encrypt(instr: str, key: str = "frontendencryptx", iv: str = None):
+    try:
+        iv = str(iv.ljust(16, "x"))  # 补齐 16 位
+        cipher = AES.new(key.encode(), AES.MODE_CBC, iv.encode())
+        ret = base64.b64encode(cipher.encrypt(pad(str(instr))))
+
+    except Exception as e:
+        logger.error(e)
+        raise EncryptError()
+
+    return ret.decode()
+
+
+def decrypt(instr, key="frontendencryptx", iv: str = None):
+    try:
+        iv = str(iv.ljust(16, "x"))  # 补齐 16 位
+        b64str = base64.b64decode(format_instr(str(instr)))
+        cipher = AES.new(key.encode(), AES.MODE_CBC, iv.encode())
+        ret = un_pad(cipher.decrypt(b64str))
+        ret = ret.decode()
+    except Exception as e:
+        logger.error(e)
+        raise DecryptError()
     return ret
 
 
-def decrypt(instr, key=b'frontendencryptx', iv=b'frontendencryptx'):
-    instr = base64.b64decode(instr)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    ret = un_pad(cipher.decrypt(instr))
-    ret = ret.decode(encoding="utf-8")
-    return ret
+def format_instr(instr) -> str:
+    return instr.replace(" ", "+")
 
 
-def pad(s):
+def pad(s) -> bytes:
+    """
+    填充字符串
+    """
     bs = AES.block_size
-    s = s.encode("utf-8")
-    return s + (bs - len(s) % bs) * chr(bs - len(s) % bs).encode("utf-8")
+    s = s.encode()
+    return s + (bs - len(s) % bs) * chr(bs - len(s) % bs).encode()
 
 
-def un_pad(s):
-    return s[:-ord(s[len(s) - 1:])]
-
-
-# def test():
-#     # key = b'frontendencryptx'
-#     # iv = b'frontendencryptx'
-#     instr = str(1)
-#     print(encrypt(instr))
-#     print(decrypt(encrypt(instr)))
-# test()
-
-# def generate_key():
-#     key = b'frontendencryptx'
-#     iv = b'frontendencryptx'
-#     print()
-#
-# generate_key()
-
+def un_pad(s) -> str:
+    """
+    去除填充
+    """
+    return s[: -ord(s[len(s) - 1 :])]

@@ -1,160 +1,109 @@
 # Create your views here.
 
 from django.http import JsonResponse
-from django.shortcuts import render
-from django.views.decorators.http import require_GET, require_POST
-from django_router import router
+from rest_framework.views import APIView
 
+from general.common_exceptions import SecurityError
 from general.encrypt import decrypt
-from general.init_cache import (get_all_category,
-                                get_category_tags as g_c_ts)
-from software.models import SoftWare
+from general.init_cache import get_all_category
+from general.serializers import CommonResponseSerializer
+
+from .models import Category
+from .serializers import CategorySerializer, CategoryTagsSerializer
 
 
-@require_GET
-@router.path(pattern='')
-def category(request):
-    if request.method == 'GET':
+class CategoryView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.serializer = CommonResponseSerializer
+
+    def get(self, request):
         categories = get_all_category()
-        if len(categories) <= 0:
-            return render(request, 'category.html',
-                          {
-                              'code': 406,
-                              'error': 'Cache init failed, please contact the administrator.',
-                          })
-        try:
-            category_id = request.GET.get('category_id')
-            if category_id is None:
-                return render(request, 'category.html',
-                              {
-                                  'code': 402,
-                                  'error': 'wrong category_id',
-                              })
-            else:
-                category_id = category_id.replace(' ', '+')
-                category_id = int(decrypt(category_id))
-        except ValueError:
-            return render(request, 'category.html',
-                          {
-                              'code': 401,
-                              'error': 'invalid category_id',
-                          })
-        except TypeError:
-            return render(request, 'category.html',
-                          {
-                              'code': 400,
-                              'error': 'wrong type of category_id',
-                          })
-        current_category_list = [cate for cate in categories if cate.id == category_id]
-        if len(current_category_list) > 0:
-            current_category = current_category_list[0]
-            return render(request, 'category.html',
-                          {
-                              'category': current_category,
-                              'software_set': current_category.software_set.all().filter(state=2)[:9],
-                              'software_set_count': len(current_category.software_set.all().filter(state=2)),
-                          })
-        else:
-            return render(request, 'category.html',
-                          {
-                              'code': 404,
-                              'error': 'category not found',
-                          })
-    else:
-        return render(request, 'category.html', {
-            'code': 405,
-            'error': 'invalid request action',
-        })
-
-
-@require_POST
-@router.path(pattern='load/left/')
-def category(request):
-    # if request.method == 'GET':
-    if request.method == 'POST':
-        categories = get_all_category()
-        if len(categories) <= 0:
-            return JsonResponse({
-                'code': 406,
-                'error': 'Cache init failed, please contact the administrator.',
-            })
-        try:
-            category_id = request.POST.get('category_id')
-            if category_id is None:
-                return JsonResponse({
-                    'code': 402,
-                    'error': 'wrong category_id',
-                })
-            else:
-                category_id = category_id.replace(' ', '+')
-                category_id = int(decrypt(category_id))
-        except ValueError:
-            return JsonResponse({
-                'code': 401,
-                'error': 'invalid category_id',
-            })
-        except TypeError:
-            return JsonResponse({
-                'code': 400,
-                'error': 'wrong type of category_id',
-            })
-        current_category_list = [cate for cate in categories if cate.id == category_id]
-        if len(current_category_list) > 0:
-            current_category = current_category_list[0]
-            return JsonResponse({
-                'code': 200,
-                'data': {
-                    'category':
-                        {
-                            'id': current_category.id,
-                            'name': current_category.name,
-                        },
-                    'software_set':
-                        [
-                            {
-                                'id': software.id,
-                                'name': software.name,
-                                'icon': software.icon.url,
-                                'version': software.version,
-                                'description': software.description,
-                                'view_volume': software.view_volume,
-                                'download_volume': software.download_volume,
-                                'thumbs_volume': software.thumbs_volume,
-                                'is_hot': software.is_hot(),
-                                'is_recent': software.is_recent(),
-                            } for software in current_category.software_set.all().filter(state=2)[9:]
-                        ],
-                    'software_set_count': len(current_category.software_set.all().filter(state=2)[9:]),
-                }
-            })
-        else:
-            return JsonResponse({
-                'code': 404,
-                'error': 'category not found',
-            })
-    else:
-        return JsonResponse({
-            'code': 405,
-            'error': 'invalid request action',
-        })
-
-
-@router.path('api/get/category/tags/')
-@require_POST
-def get_category_tags(request):
-    if request.method == 'POST':
-        category_id = request.POST.get('category_id')
-        if category_id is None:
-            return JsonResponse({'code': 402, 'error': 'wrong category_id'})
-        else:
+        category_id = request.GET.get("category_id")
+        if category_id:
             try:
                 category_id = int(decrypt(category_id))
-                if category_id <= 0:
-                    return JsonResponse({'code': 401, 'error': 'invalid category_id'})
-                category_tags = [{'name': tag} for tag in g_c_ts(category_id)]
-                return JsonResponse({
-                    'code': 200,
-                    'data': category_tags
-                })
+            except ValueError:
+                serializer = self.serializer(data={"code": 400, "msg": "invalid category_id", "data": None})
+                if serializer.is_valid():
+                    return JsonResponse(serializer.data)
+                return JsonResponse(serializer.errors)
+            except TypeError:
+                serializer = self.serializer(data={"code": 400, "msg": "wrong type of category_id", "data": None})
+                if serializer.is_valid():
+                    return JsonResponse(serializer.data)
+                return JsonResponse(serializer.errors)
+            except SecurityError as e:
+                serializer = self.serializer(data={"code": 400, "msg": str(e), "data": None})
+                if serializer.is_valid():
+                    return JsonResponse(serializer.data)
+                return JsonResponse(serializer.errors)
             except Exception as e:
-                return JsonResponse({'code': 500, 'error': str(e)})
+                serializer = self.serializer(data={"code": 500, "msg": str(e), "data": None})
+                if serializer.is_valid():
+                    return JsonResponse(serializer.data)
+                return JsonResponse(serializer.errors)
+            categories = categories.filter(id=category_id)
+
+        # 格式化categories_data,将software_set和software_set_count添加到categories_data中
+        if len(categories) > 0:
+            category_serializer = CategorySerializer(categories, many=True)
+            serializer = self.serializer(
+                data={
+                    "code": 200,
+                    "msg": "获取成功",
+                    "data": category_serializer.data,
+                }
+            )
+            if serializer.is_valid():
+                return JsonResponse({"categories": serializer.data})
+            return JsonResponse(serializer.errors)
+        else:
+            serializer = self.serializer(data={"code": 404, "msg": "分类（列表）未找到", "data": None})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            return JsonResponse(serializer.errors)
+
+
+class CategoryTagsView(APIView):
+    def __init__(self):
+        super().__init__()
+        self.serializer = CommonResponseSerializer
+
+    def get(self, request):
+        category_id = request.GET.get("category_id")
+        if not category_id:
+            serializer = self.serializer(data={"code": 400, "msg": "分类ID为空", "data": None})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            else:
+                return JsonResponse(serializer.errors)
+        try:
+            category_id = int(decrypt(category_id))
+            if category_id <= 0:
+                serializer = self.serializer(data={"code": 400, "msg": "无效的分类ID", "data": None})
+                if serializer.is_valid():
+                    return JsonResponse(serializer.data)
+                else:
+                    return JsonResponse(serializer.errors)
+            category = Category.objects.get(id=category_id)
+            category.tags = category.slug
+            # TODO: 当前版本,标签已从分类中分离,此处应该返回分类的标签
+            category_tags_serializer = CategoryTagsSerializer(category)
+            serializer = self.serializer(data={"code": 200, "msg": "获取成功", "data": [category_tags_serializer.data]})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            else:
+                return JsonResponse(serializer.errors)
+        except SecurityError as e:
+            serializer = self.serializer(data={"code": 400, "msg": str(e), "data": None})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            else:
+                return JsonResponse(serializer.errors)
+        except Exception as e:
+            serializer = self.serializer(data={"code": 500, "msg": str(e), "data": None})
+            if serializer.is_valid():
+                return JsonResponse(serializer.data)
+            else:
+                return JsonResponse(serializer.errors)

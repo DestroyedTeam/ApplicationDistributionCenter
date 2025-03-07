@@ -1,20 +1,24 @@
 x-shared-database-env: &shared-web-env
   # MySQL configuration
-  MYSQL_DATABASE: ${MYSQL_DATABASE:-application_center}
-  MYSQL_USER: ${MYSQL_USER:-application_center}
-  MYSQL_PASSWORD: ${MYSQL_PASSWORD:-application_center}
+  POSTGRES_DATABASE: ${POSTGRES_DATABASE:-application_center}
+  POSTGRES_USER: ${POSTGRES_USER:-application_center}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-application_center}
 
 services:
   application-center:
     image: application-center:latest
+    build:
+        # dockerfile的寻找基于context上下文进行查找
+        context: ../
+        dockerfile: Dockerfile
     environment:
       # Django configuration
-      DEBUG: True
+      DEBUG: FALSE
       SECRET_KEY: ${SECRET_KEY:-test-secret-key}
 
       # MySQL configuration
-      MYSQL_HOST: ${MYSQL_HOST:-application-center-db}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      POSTGRES_HOST: ${POSTGRES_HOST:-application-center-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       <<: *shared-web-env
 
       # Redis configuration
@@ -30,14 +34,15 @@ services:
         condition: service_healthy
 
   application-center-db:
-    image: mysql:latest
+    image: postgres:latest
     environment:
-      MYSQL_ROOT_PASSWORD: root
       <<: *shared-web-env
     ports:
-        - "3306:3306"
+        - "5437:5432"
+    volumes:
+      - ./volumes/data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", "pg_isready", "-U", "application_center"]
       interval: 10s
       timeout: 5s
       retries: 3

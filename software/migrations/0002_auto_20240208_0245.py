@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('software', '0001_initial'),
+        ("software", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='software',
-            name='download_volume',
+            model_name="software",
+            name="download_volume",
             field=models.BigIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='software',
-            name='thumbs_volume',
+            model_name="software",
+            name="thumbs_volume",
             field=models.BigIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='software',
-            name='view_volume',
+            model_name="software",
+            name="view_volume",
             field=models.BigIntegerField(default=0),
         ),
     ]

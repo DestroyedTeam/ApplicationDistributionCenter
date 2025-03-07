@@ -76,7 +76,7 @@
 			$('footer').remove();
 			let myChart = echarts.init(document.getElementById('myChart'));
 			// 使用从后端传递的图表数据
-			let option = {{ chart1|safe }};
+			let option = {{ chart.bar|safe }};
 			myChart.setOption(option);
 		})
     </script>
