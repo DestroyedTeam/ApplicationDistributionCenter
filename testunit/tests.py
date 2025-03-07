@@ -84,3 +84,7 @@
 #     finally:
 #         # 关闭数据库连接
 #         connection.close()
+
+
+def test_test_func():
+    assert "pass" == "pass"
