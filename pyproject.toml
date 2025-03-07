@@ -41,18 +41,6 @@ more-itertools = "^10.5.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[[tool.poetry.source]]
-name = "aliyun"
-url = "https://mirrors.aliyun.com/pypi/simple/"
-
-[[tool.poetry.source]]
-name = "tencent"
-url = "https://mirrors.cloud.tencent.com/pypi/simple/"
-
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
