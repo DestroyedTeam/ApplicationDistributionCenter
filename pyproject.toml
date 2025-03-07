@@ -14,7 +14,7 @@ create=true
 in-project=true
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 
 
 [build-system]
