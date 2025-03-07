@@ -1,7 +1,6 @@
-.env
 *.env.*
 
-logs
+*.log
 *.log*
 
 .idea
@@ -11,5 +10,17 @@ logs
 
 **/.*
 docker/volumes/*
-volumes/*
-tests/*
+
+# test files
+testunit/**
+
+
+# local files only for production
+static/**
+media/**
+
+# local dirs/files for only development
+**/*-local.*
+**/*-local
+**/*_local.*
+**/*_local

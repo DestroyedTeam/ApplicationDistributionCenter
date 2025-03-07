@@ -177,3 +177,9 @@ static/user_center/
 # local files only for production
 static/**
 media/**
+
+# local dirs/files for only development
+**/*-local.*
+**/*-local
+**/*_local.*
+**/*_local
